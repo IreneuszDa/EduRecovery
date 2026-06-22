@@ -46,9 +46,8 @@ export default function Footer() {
                 <div className="xl:grid xl:grid-cols-5 xl:gap-8">
                     {/* Sekcja z logo i informacjami */}
                     <div className="space-y-6 xl:col-span-2">
-                        <a href="/" className="flex items-center space-x-3">
-                            <img className="h-10 w-auto" src="/logo1t.png" alt="Uczmy.pl Logo" />
-                            <span className="text-2xl font-bold text-gray-800 dark:text-gray-200">Uczmy.pl</span>
+                        <a href="/" className="flex items-center">
+                            <img className="h-12 w-auto" src="/logosm.png" alt="EduRecovery UA logo" />
                         </a>
                         <p className="text-gray-500 dark:text-gray-400 text-base max-w-xs">
                             Rewolucjonizujemy edukację, dostarczając narzędzia przyszłości dla szkół i uczniów.
@@ -87,18 +86,18 @@ export default function Footer() {
                         <SocialIcon href="https://www.facebook.com/profile.php?id=61577132242089">
                             <FacebookIcon />
                         </SocialIcon>
-                        <SocialIcon href="https://www.instagram.com/uczmypl/">
+                        <SocialIcon href="#">
                             <InstagramIcon />
                         </SocialIcon>
-                        <SocialIcon href="https://www.tiktok.com/@uczmypl">
+                        <SocialIcon href="#">
                             <TikTokIcon />
                         </SocialIcon>
-                        <SocialIcon href="https://www.linkedin.com/company/uczmy-pl/">
+                        <SocialIcon href="#">
                             <LinkedInIcon />
                         </SocialIcon>
                     </div>
                     <p className="mt-8 text-base text-gray-400 dark:text-gray-500 md:mt-0 md:order-1">
-                        © {new Date().getFullYear()} Uczmy.pl Wszelkie prawa zastrzeżone.
+                        © {new Date().getFullYear()} EduRecovery. Wszelkie prawa zastrzeżone.
                     </p>
                 </div>
             </div>

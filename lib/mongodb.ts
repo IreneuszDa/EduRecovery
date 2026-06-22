@@ -19,7 +19,7 @@ export const connectMongoDB = async () => {
 
   if (!mongodbUri) {
     throw new Error(
-      "MONGODB_URI is not configured. EduRecovery UA MVP runs without a database; configure this only when enabling imported Uczmy.pl backend routes."
+      "MONGODB_URI is not configured. EduRecovery UA MVP runs without a database; configure this only when enabling database-backed features."
     );
   }
 

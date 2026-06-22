@@ -123,7 +123,7 @@ function createRenderingScript(userCode: string, prompt: string): string {
 try:
     print(f"Saving animation using variable: ${animVarName}")
     Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=30, metadata=dict(artist='Uczmy.pl'), bitrate=1800)
+    writer = Writer(fps=30, metadata=dict(artist='EduRecovery'), bitrate=1800)
     ${animVarName}.save('animation.mp4', writer=writer)
     print("Animation saved as MP4")
 except Exception as save_error:
@@ -209,7 +209,7 @@ except Exception as e:
     
     try:
         Writer = animation.writers['ffmpeg']
-        writer = Writer(fps=10, metadata=dict(artist='Uczmy.pl'), bitrate=1800)
+        writer = Writer(fps=10, metadata=dict(artist='EduRecovery'), bitrate=1800)
         anim.save('animation.mp4', writer=writer)
         print("Error animation saved as MP4")
     except:
@@ -309,7 +309,7 @@ print("Saving animation to animation.mp4...")
 try:
     # Use ffmpeg writer for better compatibility
     Writer = animation.writers['ffmpeg']
-    writer = Writer(fps=FPS, metadata=dict(artist='Uczmy.pl'), bitrate=1800)
+    writer = Writer(fps=FPS, metadata=dict(artist='EduRecovery'), bitrate=1800)
     anim.save('animation.mp4', writer=writer)
     print("Animation saved successfully!")
 except Exception as e:

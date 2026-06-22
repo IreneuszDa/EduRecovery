@@ -1,5 +1,5 @@
 // @/lib/rbac.ts
-// Role-Based Access Control utilities for Uczmy.pl
+// Role-Based Access Control utilities for EduRecovery
 
 import { getServerSession } from "next-auth";
 import { NextRequest, NextResponse } from "next/server";

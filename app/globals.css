@@ -279,9 +279,10 @@ body {
 
   body {
     background: #ffffff !important;
+    color: #000000 !important;
   }
 
-  .no-print {
+  .no-print, button, nav, aside {
     display: none !important;
   }
 
@@ -292,12 +293,27 @@ body {
 
   .print-card {
     box-shadow: none !important;
-    border-color: #d1d5db !important;
+    border-color: #000000 !important;
     break-inside: avoid;
   }
 
   .print-break {
     break-before: page;
+  }
+
+  * {
+    color: #000000 !important;
+    background-color: transparent !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+
+  div, section, article {
+    border-color: #000000 !important;
+  }
+
+  img {
+    filter: grayscale(100%) !important;
   }
 }
 

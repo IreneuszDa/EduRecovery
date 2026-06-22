@@ -1,7 +1,7 @@
-// Service Worker for Uczmy.pl PWA
+// Service Worker for EduRecovery PWA
 // Provides offline support and caching
 
-const CACHE_NAME = 'uczmy-v1';
+const CACHE_NAME = 'edurecovery-v1';
 const OFFLINE_URL = '/offline';
 
 // Assets to cache immediately on install
@@ -138,7 +138,7 @@ self.addEventListener('push', (event) => {
     };
 
     event.waitUntil(
-        self.registration.showNotification(data.title || 'Uczmy.pl', options)
+        self.registration.showNotification(data.title || 'EduRecovery', options)
     );
 });
 

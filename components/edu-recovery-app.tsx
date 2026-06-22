@@ -18,6 +18,8 @@ import {
   Home,
   LayoutDashboard,
   Languages,
+  ListChecks,
+  Menu,
   MessageSquarePlus,
   NotebookPen,
   Printer,
@@ -27,10 +29,12 @@ import {
   Target,
   UserRound,
   Users,
-  WifiOff
+  WifiOff,
+  X
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import {
+  categoryOrder,
   categoryMeta,
   demoAnswers,
   planBlueprint,
@@ -43,7 +47,48 @@ import {
 import { type AnswerMap, categoryLabel, scoreScreening } from "@/lib/scoring";
 
 type Role = "teacher" | "student";
-type View = "dashboard" | "screening" | "brief";
+type View = "dashboard" | "screening" | "brief" | "setup" | "student-profile";
+
+const categoryVisuals: Record<
+  CategoryId,
+  {
+    chip: string;
+    dot: string;
+    bar: string;
+    track: string;
+  }
+> = {
+  fractions: {
+    chip: "border-blue-200 bg-blue-50 text-blue-700",
+    dot: "bg-blue-500",
+    bar: "bg-blue-500",
+    track: "bg-blue-100"
+  },
+  percentages: {
+    chip: "border-yellow-200 bg-yellow-50 text-yellow-700",
+    dot: "bg-yellow-500",
+    bar: "bg-yellow-500",
+    track: "bg-yellow-100"
+  },
+  geometry: {
+    chip: "border-green-200 bg-green-50 text-green-700",
+    dot: "bg-green-500",
+    bar: "bg-green-500",
+    track: "bg-green-100"
+  },
+  equations: {
+    chip: "border-indigo-200 bg-indigo-50 text-indigo-700",
+    dot: "bg-indigo-500",
+    bar: "bg-indigo-500",
+    track: "bg-indigo-100"
+  },
+  "word-problems": {
+    chip: "border-red-200 bg-red-50 text-red-700",
+    dot: "bg-red-500",
+    bar: "bg-red-500",
+    track: "bg-red-100"
+  }
+};
 
 const copy = {
   en: {
@@ -52,7 +97,7 @@ const copy = {
     student: "Student",
     welcomeTeacher: "Welcome, Olena",
     teacherLead: "Teacher-led recovery workspace for mixed-level Ukrainian classrooms.",
-    dailyContext: "Grade 6 math | 20 min/day | disrupted learning | print-first",
+    dailyContext: "Grade 6 math | 45 min/day | disrupted learning | print-first",
     runScreening: "Run screening",
     openBrief: "Open brief",
     printBrief: "Print brief",
@@ -114,7 +159,19 @@ const copy = {
     parentCopy:
       "Maksym completed a short math check-up. The goal is to find where support will help most. A 14-day plan will focus on the clearest restart points.",
     accountSwitch: "Account switch",
-    setup: "Teacher setup"
+    setup: "Teacher setup",
+    setupTitle: "Set up the recovery context",
+    setupLead: "Define the classroom constraints to adapt the screening and 14-day recovery plan.",
+    gradeSelect: "Grade level",
+    dailyTimeSelect: "Daily study time",
+    classroomMode: "Classroom context",
+    techMode: "Available resources",
+    modeDisrupted: "Disrupted learning",
+    modeNormal: "Normal attendance",
+    techLow: "Low-tech / Print-first",
+    techDigital: "Digital / Devices available",
+    startRecovery: "Start recovery workspace",
+    demoDataFill: "Use demo data"
   },
   uk: {
     educatorAssistant: "Цифровий асистент для педагогів",
@@ -122,20 +179,20 @@ const copy = {
     student: "Учень",
     welcomeTeacher: "Вітаємо, Олено",
     teacherLead: "Робочий простір відновлення навчання для різнорівневих українських класів.",
-    dailyContext: "Математика 6 клас | 20 хв/день | перерви в навчанні | матеріали для друку",
+    dailyContext: "Математика 6 клас | 45 хв/день | перерви в навчанні | матеріали для друку",
     runScreening: "Провести скринінг",
-    openBrief: "Відкрити brief",
-    printBrief: "Друк brief",
+    openBrief: "Відкрити звіт",
+    printBrief: "Друк звіту",
     classPulse: "Стан групи",
     activeStudents: "Активні учні",
     likelyGaps: "Ймовірні прогалини",
     taskStatus: "Статус AI-завдань",
-    briefReady: "Brief для вчителя",
+    briefReady: "Звіт для вчителя",
     ready: "Готово",
-    requested: "Створено",
+    requested: "Запитано",
     students: "Учні",
     progress: "Прогрес",
-    restartPoints: "Точки повернення",
+    restartPoints: "Точки відновлення",
     nextAction: "Наступна дія",
     generateAiTasks: "Згенерувати AI-завдання",
     aiDrafted: "Набір AI-завдань створено з плану відновлення.",
@@ -149,42 +206,54 @@ const copy = {
     startScreening: "Почати скринінг",
     continueScreening: "Продовжити скринінг",
     screeningTitle: "Швидкий скринінг з математики",
-    screeningLead: "Короткий скринінг під керівництвом учителя для визначення практичних точок повернення.",
-    question: "Питання",
+    screeningLead: "Короткий скринінг під керівництвом учителя для визначення практичних точок відновлення.",
+    question: "Запитання",
     previous: "Назад",
     next: "Далі",
     useDemo: "Використати демо",
     reset: "Скинути",
     finish: "Відкрити результат",
-    resultSnapshot: "Короткий результат",
-    strongerAreas: "Сильніші напрями",
+    resultSnapshot: "Огляд результатів",
+    strongerAreas: "Сильні сторони",
     recoveryPlan: "14-денний план відновлення",
     printableExercises: "Вправи для друку",
-    teacherRecoveryBrief: "Teacher Recovery Brief",
+    teacherRecoveryBrief: "Звіт з відновлення для вчителя",
     overallSnapshot: "Загальний огляд",
-    recommendedRestart: "Рекомендована точка повернення",
+    recommendedRestart: "Рекомендована точка відновлення",
     teacherRecommendations: "Рекомендації для вчителя",
     disclaimer:
-      "Це швидкий скринінг із 10 питань для визначення практичних точок повернення у відновленні навчання. Це не повна діагностична оцінка. Вчитель має використовувати професійне судження та спостереження в класі.",
+      "Це швидкий скринінг із 10 питань для визначення практичних точок відновлення у відновленні навчання. Це не повна діагностична оцінка. Вчитель має використовувати професійне судження та спостереження в класі.",
     lowTech: "Низькотехнологічна адаптація",
     curriculum: "Навчальна програма",
-    viewAs: "Режим",
+    viewAs: "Переглядати як",
     language: "Мова",
     aiTasksForStudent: "Набір завдань від учителя",
     noTasksYet: "Завдань ще немає",
     noTasksLead: "Учитель може створити цільовий набір завдань із плану відновлення.",
-    weekOne: "Тиждень 1: основа",
+    weekOne: "Тиждень 1: базові знання",
     weekTwo: "Тиждень 2: інтеграція",
     categoryScores: "Результати за темами",
     screeningPurpose:
-      "Максим пройшов швидкий скринінг, щоб визначити практичну точку повернення після перерв у навчанні.",
+      "Максим пройшов швидкий скринінг, щоб визначити практичну точку відновлення після перерв у навчанні.",
     restartCopy:
       "Почніть із цільової роботи над основною прогалиною. Нехай заняття будуть короткими й практичними, а другу тему інтегруйте на другому тижні.",
-    parentSummary: "Коротко для батьків",
+    parentSummary: "Підсумок для батьків",
     parentCopy:
-      "Максим пройшов коротку перевірку з математики. Мета - зрозуміти, де підтримка допоможе найбільше. 14-денний план зосередиться на найчіткіших точках повернення.",
-    accountSwitch: "Перемикання акаунта",
-    setup: "Налаштування вчителя"
+      "Максим пройшов коротку перевірку з математики. Мета - зрозуміти, де підтримка допоможе найбільше. 14-денний план зосередиться на найчіткіших точках відновлення.",
+    accountSwitch: "Зміна акаунта",
+    setup: "Налаштування вчителя",
+    setupTitle: "Налаштуйте контекст відновлення",
+    setupLead: "Визначте умови в класі для адаптації скринінгу та 14-денного плану відновлення.",
+    gradeSelect: "Клас",
+    dailyTimeSelect: "Час на день",
+    classroomMode: "Контекст навчання",
+    techMode: "Доступні ресурси",
+    modeDisrupted: "Перерви в навчанні",
+    modeNormal: "Стабільне відвідування",
+    techLow: "Обмежений інтернет / Друк",
+    techDigital: "Є пристрої / Інтернет",
+    startRecovery: "Почати роботу",
+    demoDataFill: "Використати демо-дані"
   }
 } satisfies Record<Lang, Record<string, string>>;
 
@@ -198,15 +267,25 @@ const roster = [
 export function EduRecoveryApp() {
   const [lang, setLang] = useState<Lang>("en");
   const [role, setRole] = useState<Role>("teacher");
-  const [view, setView] = useState<View>("dashboard");
-  const [answers, setAnswers] = useState<AnswerMap>(demoAnswers);
+  const [view, setView] = useState<View>("setup");
+  const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
+  const [answers, setAnswers] = useState<AnswerMap>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [tasksGenerated, setTasksGenerated] = useState(false);
+  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const [setupData, setSetupData] = useState({
+    grade: "6",
+    dailyTime: "45 min/day",
+    classroomMode: "disrupted",
+    techMode: "low-tech"
+  });
 
   const text = copy[lang];
   const result = useMemo(() => scoreScreening(answers), [answers]);
-  const primaryGap = result.weakestCategories[0];
-  const secondaryGap = result.weakestCategories[1];
+  const primaryGap = result.weakestCategories[0] || "percentages";
+  const secondaryGap = result.weakestCategories[1] || "word-problems";
   const answeredCount = questions.filter((question) => answers[question.id]).length;
   const isComplete = answeredCount === questions.length;
 
@@ -214,10 +293,31 @@ export function EduRecoveryApp() {
     setRole(nextRole);
     setView("dashboard");
   };
+
+  const handleGenerateTasks = () => {
+    setIsGeneratingTasks(true);
+    setTimeout(() => {
+      setIsGeneratingTasks(false);
+      setTasksGenerated(true);
+    }, 2000);
+  };
+
   const workspaceLabel = lang === "en" ? "workspace" : "простір";
 
   const content =
-    view === "screening" ? (
+    view === "setup" ? (
+      <TeacherSetupView
+        lang={lang}
+        setupData={setupData}
+        setSetupData={setSetupData}
+        onComplete={() => setView("dashboard")}
+        onDemoFill={() => {
+          setSetupData({ grade: "6", dailyTime: "45 min/day", classroomMode: "disrupted", techMode: "low-tech" });
+          setAnswers(demoAnswers);
+          setView("dashboard");
+        }}
+      />
+    ) : view === "screening" ? (
       <ScreeningView
         lang={lang}
         answers={answers}
@@ -240,7 +340,19 @@ export function EduRecoveryApp() {
         result={result}
         primaryGap={primaryGap}
         secondaryGap={secondaryGap}
+        setupData={setupData}
         onBack={() => setView("dashboard")}
+      />
+    ) : view === "student-profile" && selectedStudent ? (
+      <StudentProfileView
+        lang={lang}
+        studentName={selectedStudent}
+        result={result}
+        primaryGap={primaryGap}
+        secondaryGap={secondaryGap}
+        onBack={() => setView("dashboard")}
+        onOpenScreening={() => setView("screening")}
+        onOpenBrief={() => setView("brief")}
       />
     ) : role === "teacher" ? (
       <TeacherDashboard
@@ -251,17 +363,19 @@ export function EduRecoveryApp() {
         tasksGenerated={tasksGenerated}
         isComplete={isComplete}
         answeredCount={answeredCount}
-        onGenerateTasks={() => setTasksGenerated(true)}
+        setupData={setupData}
+        isGeneratingTasks={isGeneratingTasks}
+        onGenerateTasks={handleGenerateTasks}
         onOpenScreening={() => setView("screening")}
         onOpenBrief={() => setView("brief")}
+        onSelectStudent={(name) => {
+          setSelectedStudent(name);
+          setView("student-profile");
+        }}
       />
     ) : (
       <StudentDashboard
         lang={lang}
-        result={result}
-        primaryGap={primaryGap}
-        secondaryGap={secondaryGap}
-        tasksGenerated={tasksGenerated}
         answeredCount={answeredCount}
         onOpenScreening={() => setView("screening")}
       />
@@ -270,35 +384,59 @@ export function EduRecoveryApp() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-950">
       <div className="flex min-h-screen">
+        {isMobileMenuOpen && (
+          <div 
+            className="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-sm lg:hidden transition-opacity" 
+            onClick={() => setIsMobileMenuOpen(false)} 
+          />
+        )}
         <WorkspaceSidebar
           lang={lang}
           role={role}
           view={view}
+          selectedStudent={selectedStudent}
           tasksGenerated={tasksGenerated}
-          onSetRole={switchRole}
-          onSetView={setView}
-          onGenerateTasks={() => setTasksGenerated(true)}
+          isMobileMenuOpen={isMobileMenuOpen}
+          onSetRole={(newRole) => {
+            switchRole(newRole);
+            setIsMobileMenuOpen(false);
+          }}
+          onSetView={(newView) => {
+            setView(newView);
+            setIsMobileMenuOpen(false);
+          }}
+          isGeneratingTasks={isGeneratingTasks}
+          onGenerateTasks={() => {
+            handleGenerateTasks();
+            setIsMobileMenuOpen(false);
+          }}
+          onSelectStudent={(student) => {
+            setSelectedStudent(student);
+            setIsMobileMenuOpen(false);
+          }}
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="no-print sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-md sm:px-6 lg:px-8">
-            <div className="min-w-0">
-              <p className="truncate text-sm font-semibold text-blue-600">{role === "teacher" ? text.teacher : text.student} {workspaceLabel}</p>
-              <h1 className="truncate text-xl font-semibold text-slate-950">
-                {view === "brief" ? text.teacherRecoveryBrief : view === "screening" ? text.screeningTitle : role === "teacher" ? text.dashboard : text.studentViewTitle}
-              </h1>
+            <div className="flex items-center gap-3 min-w-0">
+              <button
+                type="button"
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none lg:hidden"
+              >
+                <span className="sr-only">Open sidebar</span>
+                <Menu className="h-6 w-6" aria-hidden="true" />
+              </button>
+              <img src="/logosm.png" alt="EduRecovery UA logo" className="h-10 w-auto shrink-0 lg:hidden" />
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-blue-600">{role === "teacher" ? text.teacher : text.student} {workspaceLabel}</p>
+                <h1 className="truncate text-xl font-semibold text-slate-950">
+                  {view === "setup" ? text.setup : view === "brief" ? text.teacherRecoveryBrief : view === "screening" ? text.screeningTitle : view === "student-profile" ? `${selectedStudent} - ${text.student}` : role === "teacher" ? text.dashboard : text.studentViewTitle}
+                </h1>
+              </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
-              <SegmentedControl
-                label={text.viewAs}
-                icon={<UserRound className="h-4 w-4" aria-hidden />}
-                value={role}
-                options={[
-                  { value: "teacher", label: text.teacher },
-                  { value: "student", label: text.student }
-                ]}
-                onChange={(value) => switchRole(value as Role)}
-              />
+
               <SegmentedControl
                 label={text.language}
                 icon={<Languages className="h-4 w-4" aria-hidden />}
@@ -313,6 +451,13 @@ export function EduRecoveryApp() {
           </header>
 
           <div className="animate-fade-in-up mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8">{content}</div>
+          
+          <footer className="no-print mt-auto border-t border-slate-200/80 bg-white/50 px-4 py-5 text-center text-sm text-slate-500 backdrop-blur-sm sm:px-6 lg:px-8">
+            <p>
+              &copy; {new Date().getFullYear()} EduRecovery UA.{" "}
+              {lang === "en" ? "All rights reserved." : "Всі права захищені."}
+            </p>
+          </footer>
         </div>
       </div>
     </main>
@@ -323,38 +468,47 @@ function WorkspaceSidebar({
   lang,
   role,
   view,
+  selectedStudent,
   tasksGenerated,
+  isGeneratingTasks,
+  isMobileMenuOpen,
   onSetRole,
   onSetView,
-  onGenerateTasks
+  onGenerateTasks,
+  onSelectStudent
 }: {
   lang: Lang;
   role: Role;
   view: View;
+  selectedStudent: string | null;
   tasksGenerated: boolean;
+  isGeneratingTasks: boolean;
+  isMobileMenuOpen: boolean;
   onSetRole: (role: Role) => void;
   onSetView: (view: View) => void;
   onGenerateTasks: () => void;
+  onSelectStudent: (name: string | null) => void;
 }) {
   const text = copy[lang];
-  const navItems = [
+  const studentNavItems = [
     { id: "dashboard" as View, label: text.dashboard, icon: LayoutDashboard },
+    { id: "screening" as View, label: text.quickScreening, icon: ClipboardList }
+  ];
+
+  const teacherStudentItems = [
+    { id: "student-profile" as View, label: text.dashboard, icon: LayoutDashboard },
     { id: "screening" as View, label: text.quickScreening, icon: ClipboardList },
     { id: "brief" as View, label: text.teacherRecoveryBrief, icon: FileText }
   ];
 
   return (
-    <aside className="no-print hidden w-72 shrink-0 border-r border-slate-200/80 bg-white lg:flex">
-      <div className="flex min-h-screen w-full flex-col p-5">
-        <button type="button" onClick={() => onSetView("dashboard")} className="mb-7 flex items-center gap-3 text-left">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-            <img src="/logo.PNG" alt="EduRecovery UA logo" className="h-11 w-11 object-cover" />
+    <aside className={`no-print fixed inset-y-0 left-0 z-50 w-72 shrink-0 overflow-y-auto border-r border-slate-200/80 bg-white transition-transform duration-300 lg:static lg:flex lg:translate-x-0 ${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} lg:sticky lg:top-0 lg:h-screen lg:shadow-none`}>
+      <div className="flex h-full w-full flex-col p-5">
+        <a href="/" className="mb-7 flex items-center justify-center text-left hover:opacity-80 transition-opacity cursor-pointer">
+          <span className="flex h-24 w-48 shrink-0 items-center justify-center overflow-hidden bg-transparent">
+            <img src="/logosm.png" alt="EduRecovery UA logo" className="h-full w-full object-contain" />
           </span>
-          <span className="min-w-0">
-            <span className="block truncate text-2xl font-bold tracking-tight text-slate-900">EduRecovery UA</span>
-            <span className="block truncate text-xs font-medium text-slate-500">{text.educatorAssistant}</span>
-          </span>
-        </button>
+        </a>
 
         <div className="mb-5 rounded-lg border border-slate-200 bg-slate-50 p-2">
           <div className="grid grid-cols-2 gap-1">
@@ -363,8 +517,9 @@ function WorkspaceSidebar({
                 key={item}
                 type="button"
                 onClick={() => onSetRole(item)}
+                disabled={view === "setup" && item === "student"}
                 className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
-                  role === item ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800"
+                  role === item ? "bg-white text-blue-700 shadow-sm" : "text-slate-500 hover:text-slate-800 disabled:opacity-50 disabled:cursor-not-allowed"
                 }`}
               >
                 {item === "teacher" ? text.teacher : text.student}
@@ -373,66 +528,120 @@ function WorkspaceSidebar({
           </div>
         </div>
 
-        <nav className="mb-6 flex flex-col gap-1.5">
-          <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{lang === "en" ? "Tools" : "Інструменти"}</p>
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const active = view === item.id;
-
-            return (
+        {role === "teacher" ? (
+          <nav className="mb-6 flex flex-col gap-3">
+            <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{lang === "en" ? "Students" : "Учні"}</p>
+            <div className="flex flex-col gap-1 mb-2">
               <button
-                key={item.id}
                 type="button"
-                onClick={() => onSetView(item.id)}
-                className="group relative flex items-center rounded-lg px-3.5 py-2.5 text-left text-sm transition-all duration-200"
-              >
-                {active && <span className="absolute inset-0 rounded-lg bg-slate-100" />}
-                <span className="relative z-10 flex items-center">
-                  <Icon className={`h-5 w-5 shrink-0 transition-colors ${active ? "text-blue-600" : "text-slate-500 group-hover:text-blue-600"}`} strokeWidth={active ? 2.5 : 2} />
-                  <span className={`ml-4 truncate ${active ? "font-semibold text-slate-950" : "font-medium text-slate-600 group-hover:text-slate-900"}`}>
-                    {item.label}
-                  </span>
-                </span>
-              </button>
-            );
-          })}
-        </nav>
-
-        <div className="mb-6">
-          <button
-            type="button"
-            onClick={onGenerateTasks}
-            className="flex w-full items-center justify-center gap-2.5 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-md"
-          >
-            <MessageSquarePlus className="h-5 w-5" strokeWidth={2.5} aria-hidden />
-            {text.generateAiTasks}
-          </button>
-        </div>
-
-        <div className="flex min-h-0 flex-1 flex-col">
-          <p className="mb-2 px-2 text-xs font-semibold uppercase tracking-wider text-slate-400">{lang === "en" ? "Recovery history" : "Історія відновлення"}</p>
-          <div className="custom-scrollbar min-h-0 flex-1 space-y-1 overflow-y-auto pr-1">
-            {[
-              { title: lang === "en" ? "Maksym: percentages plan" : "Максим: план з відсотків", active: true },
-              { title: lang === "en" ? "Iryna: fractions review" : "Ірина: повторення дробів", active: false },
-              { title: lang === "en" ? "Danylo: equation steps" : "Данило: кроки рівнянь", active: false }
-            ].map((item) => (
-              <button
-                key={item.title}
-                type="button"
-                onClick={() => onSetView(item.active ? "brief" : "dashboard")}
-                className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
-                  item.active ? "bg-blue-50 font-semibold text-blue-800" : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                onClick={() => {
+                  onSelectStudent(null);
+                  onSetView("dashboard");
+                }}
+                className={`group flex items-center gap-3 rounded-lg px-3.5 py-2 text-left text-sm transition-all duration-200 ${
+                  view === "dashboard" && !selectedStudent ? "bg-blue-50 font-semibold text-blue-700" : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                 }`}
               >
-                <NotebookPen className="h-4 w-4 shrink-0" aria-hidden />
-                <span className="truncate">{item.title}</span>
+                <LayoutDashboard className={`h-5 w-5 shrink-0 transition-colors ${view === "dashboard" && !selectedStudent ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`} strokeWidth={view === "dashboard" && !selectedStudent ? 2.5 : 2} />
+                <span className="truncate">{text.dashboard}</span>
               </button>
-            ))}
-          </div>
-        </div>
+            </div>
 
-        <div className="mt-5 border-t border-slate-200 pt-4">
+            {roster.map((student) => {
+              const isSelected = selectedStudent === student.name;
+              return (
+                <div key={student.name} className="flex flex-col gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onSelectStudent(student.name);
+                      onSetView("student-profile");
+                    }}
+                    className={`flex items-center gap-3 rounded-lg px-3.5 py-2 text-left text-sm transition-all duration-200 ${
+                      isSelected ? "bg-slate-100 font-semibold text-slate-950" : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    }`}
+                  >
+                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
+                      isSelected ? "border-blue-200 bg-white text-blue-700" : "border-blue-100 bg-blue-50 text-blue-700"
+                    }`}>
+                      {student.name[0]}
+                    </span>
+                    <span className="truncate">{student.name}</span>
+                  </button>
+
+                  {isSelected && (
+                    <div className="ml-4 mt-1 flex flex-col gap-1 border-l-2 border-slate-100 pl-3">
+                      {teacherStudentItems.map((item) => {
+                        const Icon = item.icon;
+                        const active = view === item.id;
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => onSetView(item.id)}
+                            className={`group flex items-center gap-3 rounded-lg px-3 py-1.5 text-left text-sm transition-all duration-200 ${
+                              active ? "font-semibold text-blue-600" : "text-slate-500 hover:text-slate-900"
+                            }`}
+                          >
+                            <Icon className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`} strokeWidth={active ? 2.5 : 2} />
+                            <span className="truncate">{item.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        ) : (
+          <nav className="mb-6 flex flex-col gap-1.5">
+            <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{lang === "en" ? "Tools" : "Інструменти"}</p>
+            {studentNavItems.map((item) => {
+              const Icon = item.icon;
+              const active = view === item.id;
+
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => onSetView(item.id)}
+                  className="group relative flex items-center rounded-lg px-3.5 py-2.5 text-left text-sm transition-all duration-200"
+                >
+                  {active && <span className="absolute inset-0 rounded-lg bg-slate-100" />}
+                  <span className="relative z-10 flex items-center">
+                    <Icon className={`h-5 w-5 shrink-0 transition-colors ${active ? "text-blue-600" : "text-slate-500 group-hover:text-blue-600"}`} strokeWidth={active ? 2.5 : 2} />
+                    <span className={`ml-4 truncate ${active ? "font-semibold text-slate-950" : "font-medium text-slate-600 group-hover:text-slate-900"}`}>
+                      {item.label}
+                    </span>
+                  </span>
+                </button>
+              );
+            })}
+          </nav>
+        )}
+
+        {role === "teacher" && (
+          <div className="flex min-h-0 flex-1 flex-col justify-end">
+            <div className="mb-6">
+              <button
+                type="button"
+                onClick={onGenerateTasks}
+                disabled={isGeneratingTasks}
+                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isGeneratingTasks ? (
+                  <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-700" aria-hidden />
+                ) : (
+                  <MessageSquarePlus className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+                )}
+                {isGeneratingTasks ? (lang === "en" ? "Generating..." : "Створення...") : text.generateAiTasks}
+              </button>
+            </div>
+          </div>
+        )}
+
+        <div className="mt-auto border-t border-slate-200 pt-4">
           <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm">
@@ -444,10 +653,12 @@ function WorkspaceSidebar({
               </div>
             </div>
           </div>
-          <div className="flex items-center justify-between rounded-lg bg-slate-950 px-3 py-2 text-xs font-medium text-white">
-            <span>{tasksGenerated ? text.requested : text.ready}</span>
-            <HelpCircle className="h-4 w-4 text-slate-300" aria-hidden />
-          </div>
+          {role === "teacher" && (
+            <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
+              <span>{tasksGenerated ? text.requested : text.ready}</span>
+              <HelpCircle className="h-4 w-4 text-blue-500" aria-hidden />
+            </div>
+          )}
         </div>
       </div>
     </aside>
@@ -460,99 +671,200 @@ function TeacherDashboard({
   primaryGap,
   secondaryGap,
   tasksGenerated,
+  isGeneratingTasks,
   isComplete,
   answeredCount,
+  setupData,
   onGenerateTasks,
   onOpenScreening,
-  onOpenBrief
+  onOpenBrief,
+  onSelectStudent
 }: {
   lang: Lang;
   result: ReturnType<typeof scoreScreening>;
   primaryGap: CategoryId;
   secondaryGap: CategoryId;
   tasksGenerated: boolean;
+  isGeneratingTasks: boolean;
   isComplete: boolean;
   answeredCount: number;
+  setupData: { grade: string; dailyTime: string; classroomMode: string; techMode: string };
   onGenerateTasks: () => void;
   onOpenScreening: () => void;
   onOpenBrief: () => void;
+  onSelectStudent: (name: string) => void;
 }) {
   const text = copy[lang];
-  const primaryBlock = recoveryBlocks[primaryGap];
-  const secondaryBlock = recoveryBlocks[secondaryGap];
+  const classAverage = Math.round(roster.reduce((acc, student) => acc + student.progress, 0) / roster.length);
+  const studentsNeedingSupport = roster.filter((student) => student.status === "active" || student.progress < 65);
+  const gapCounts = categoryOrder
+    .map((category) => ({
+      category,
+      count: roster.filter((student) => student.gaps.includes(category)).length
+    }))
+    .filter((item) => item.count > 0)
+    .sort((a, b) => b.count - a.count);
+  const screeningStatus = isComplete
+    ? lang === "en"
+      ? "Maksym screening complete"
+      : "Скринінг Максима завершено"
+    : lang === "en"
+      ? `${answeredCount}/10 screening answers`
+      : `${answeredCount}/10 відповідей скринінгу`;
 
   return (
     <div className="grid gap-6">
-      <section className="grid gap-4 lg:grid-cols-[1.35fr_0.65fr]">
+      <section className="grid items-start gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-          <div className="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+          <div className="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
             <div className="max-w-2xl">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1 text-sm font-medium text-blue-700">
-                <BrainCircuit className="h-4 w-4" aria-hidden />
-                {text.localOnly}
+              <div className="mb-4 flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-2 rounded-lg border border-blue-100 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
+                  <BrainCircuit className="h-4 w-4" aria-hidden />
+                  {lang === "en" ? "Today’s recovery board" : "План відновлення на сьогодні"}
+                </span>
+                <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-medium text-slate-600">
+                  {text.localOnly}
+                </span>
               </div>
-              <h1 className="text-3xl font-semibold text-slate-950 sm:text-4xl">{text.welcomeTeacher}</h1>
-              <p className="mt-3 max-w-xl text-base leading-7 text-slate-600">{text.teacherLead}</p>
-              <div className="mt-4 flex flex-wrap gap-2 text-sm text-slate-600">
-                <InfoChip icon={<GraduationCap className="h-4 w-4" />} label={text.dailyContext} />
+              <h1 className="text-3xl font-semibold text-slate-950 sm:text-4xl">
+                {lang === "en" ? "Teach the class, then target the gaps." : "Працюйте з класом і точково закривайте прогалини."}
+              </h1>
+              <p className="mt-3 max-w-2xl text-base leading-7 text-slate-600">
+                {lang === "en"
+                  ? "Olena sees the whole group first: who needs a screening, which gaps repeat across students, and what to print for the next recovery block."
+                  : "Олена спершу бачить всю групу: кому потрібен скринінг, які прогалини повторюються і що друкувати для наступного блоку."}
+              </p>
+              <div className="mt-5 flex flex-wrap gap-2 text-sm text-slate-600">
+                <InfoChip icon={<Users className="h-4 w-4" />} label={`${roster.length} ${lang === "en" ? "students" : "учні"}`} />
+                <InfoChip icon={<GraduationCap className="h-4 w-4" />} label={`${lang === "en" ? "Grade" : "Клас"} ${setupData.grade}`} />
+                <InfoChip icon={<Gauge className="h-4 w-4" />} label={setupData.dailyTime} />
+                <InfoChip icon={<WifiOff className="h-4 w-4" />} label={setupData.techMode === "low-tech" ? text.techLow : text.techDigital} />
               </div>
             </div>
-            <div className="flex flex-col gap-2 sm:min-w-52">
+            <div className="grid min-w-56 gap-2">
               <ActionButton icon={<ClipboardList className="h-4 w-4" />} label={text.runScreening} onClick={onOpenScreening} />
-              <SecondaryButton icon={<FileText className="h-4 w-4" />} label={text.openBrief} onClick={onOpenBrief} />
+              <SecondaryButton icon={<FileText className="h-4 w-4" />} label={text.openBrief} onClick={onOpenBrief} disabled={!isComplete} />
             </div>
           </div>
         </div>
 
-        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-          <p className="text-sm font-medium text-slate-500">{text.setup}</p>
-          <div className="mt-4 grid gap-3">
-            <SetupItem icon={<Gauge className="h-4 w-4" />} label={lang === "en" ? "20 min/day" : "20 хв/день"} />
-            <SetupItem icon={<WifiOff className="h-4 w-4" />} label={lang === "en" ? "Low-bandwidth, print-first" : "Мало інтернету, друк насамперед"} />
-            <SetupItem icon={<Users className="h-4 w-4" />} label={lang === "en" ? "Mixed-level support" : "Підтримка різних рівнів"} />
-            <SetupItem icon={<Languages className="h-4 w-4" />} label={studentProfile.language[lang]} />
+        <div className="rounded-lg border border-blue-100 bg-blue-50 p-5 shadow-soft">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-sm font-semibold text-blue-700">{lang === "en" ? "Next 45 minutes" : "Наступні 45 хвилин"}</p>
+              <h2 className="mt-2 text-2xl font-semibold text-slate-900">
+                {lang === "en" ? "Print one shared block, then split support." : "Один друкований блок, потім групи підтримки."}
+              </h2>
+            </div>
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-blue-100 bg-white text-blue-600 shadow-hairline">
+              <NotebookPen className="h-5 w-5" aria-hidden />
+            </span>
           </div>
-          <AiComposer lang={lang} tasksGenerated={tasksGenerated} onGenerateTasks={onGenerateTasks} />
+          <div className="mt-5 grid gap-3">
+            <TeachingStep
+              step="1"
+              title={lang === "en" ? "Whole-class warm-up" : "Розминка для всього класу"}
+              detail={`${categoryLabel(primaryGap, lang)} + ${categoryLabel(secondaryGap, lang)}`}
+            />
+            <TeachingStep
+              step="2"
+              title={lang === "en" ? "Small-group pullout" : "Мала група підтримки"}
+              detail={studentsNeedingSupport.map((student) => student.name).join(", ")}
+            />
+            <TeachingStep
+              step="3"
+              title={lang === "en" ? "Printable evidence" : "Матеріали для друку"}
+              detail={tasksGenerated ? text.aiDrafted : text.waitingForRequest}
+            />
+          </div>
+          <button
+            type="button"
+            onClick={onGenerateTasks}
+            disabled={isGeneratingTasks}
+            className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-white px-4 py-3 text-sm font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isGeneratingTasks ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-blue-700" aria-hidden />
+            ) : (
+              <Sparkles className="h-4 w-4" aria-hidden />
+            )}
+            {isGeneratingTasks ? (lang === "en" ? "Generating..." : "Створення...") : text.generateAiTasks}
+          </button>
         </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <MetricCard icon={<Users className="h-5 w-5" />} label={text.activeStudents} value="4" detail={text.classPulse} />
+        <MetricCard tone="blue" icon={<Users className="h-5 w-5" />} label={text.activeStudents} value={roster.length.toString()} detail={text.classPulse} />
         <MetricCard
+          tone="red"
           icon={<BarChart3 className="h-5 w-5" />}
           label={text.likelyGaps}
           value={`${categoryLabel(primaryGap, lang)} + ${categoryLabel(secondaryGap, lang)}`}
-          detail={`${result.totalCorrect}/${result.totalQuestions} ${text.quickScreening}`}
+          detail={lang === "en" ? "Class-wide trends" : "Загальні тенденції класу"}
         />
         <MetricCard
-          icon={<Sparkles className="h-5 w-5" />}
-          label={text.taskStatus}
-          value={tasksGenerated ? text.requested : text.ready}
-          detail={tasksGenerated ? text.aiDrafted : text.waitingForRequest}
+          tone="green"
+          icon={<Gauge className="h-5 w-5" />}
+          label={text.progress}
+          value={`${classAverage}%`}
+          detail={lang === "en" ? "Average completion" : "Середній рівень виконання"}
         />
-        <MetricCard icon={<Printer className="h-5 w-5" />} label={text.briefReady} value={isComplete ? text.ready : `${answeredCount}/10`} detail={text.printBrief} />
+        <MetricCard
+          tone="yellow"
+          icon={<ClipboardCheck className="h-5 w-5" />}
+          label={lang === "en" ? "Screening status" : "Статус скринінгу"}
+          value={screeningStatus}
+          detail={lang === "en" ? "Use demo result to unlock the brief" : "Демо-результат відкриває brief"}
+        />
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+      <section className="grid items-start gap-6 xl:grid-cols-[0.85fr_1.15fr]">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
           <div className="mb-5 flex items-center justify-between gap-3">
             <div>
-              <h2 className="text-xl font-semibold text-slate-950">{text.students}</h2>
-              <p className="mt-1 text-sm text-slate-500">{lang === "en" ? "Demo cohort for a teacher-led recovery workflow." : "Демо-група для відновлення навчання під керівництвом учителя."}</p>
+              <h2 className="text-xl font-semibold text-slate-950">{lang === "en" ? "Attention queue" : "Черга уваги"}</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {lang === "en" ? "Start with students where the same gap blocks tomorrow’s class." : "Почніть з учнів, де одна прогалина заважає наступному уроку."}
+              </p>
             </div>
-            <button
-              type="button"
-              onClick={onGenerateTasks}
-              className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-3 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
-            >
-              <Sparkles className="h-4 w-4" aria-hidden />
-              {text.generateAiTasks}
-            </button>
+            <ListChecks className="h-5 w-5 text-blue-600" aria-hidden />
           </div>
+          <div className="grid gap-3">
+            {studentsNeedingSupport.map((student) => (
+              <PriorityStudentRow key={student.name} student={student} lang={lang} onSelectStudent={onSelectStudent} />
+            ))}
+          </div>
+        </div>
 
+        <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-soft sm:p-5">
+          <div className="mb-5 grid gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-950">{text.students}</h2>
+              <p className="mt-1 text-sm text-slate-500">
+                {lang === "en" ? "Class roster with recovery topics and next actions." : "Список учнів з темами відновлення та наступними діями."}
+              </p>
+            </div>
+            <div className="w-full rounded-lg border border-blue-100 bg-blue-50/60 p-3 sm:p-4">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase text-blue-700">{lang === "en" ? "Gap pattern" : "Патерн прогалин"}</p>
+                <p className="text-xs font-medium text-slate-500">{lang === "en" ? "Students affected" : "Учнів у групі"}</p>
+              </div>
+              <div className="mt-4 grid grid-cols-[repeat(auto-fit,minmax(8.25rem,1fr))] gap-3">
+                {gapCounts.map((item) => (
+                  <ClassGapStrip key={item.category} category={item.category} count={item.count} lang={lang} />
+                ))}
+              </div>
+            </div>
+          </div>
           <div className="grid gap-3">
             {roster.map((student) => (
-              <div key={student.name} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50/70 p-3 md:grid-cols-[0.9fr_1fr_0.9fr] md:items-center">
+              <button
+                key={student.name}
+                type="button"
+                onClick={() => onSelectStudent(student.name)}
+                className="grid w-full gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left shadow-hairline transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-md lg:grid-cols-[minmax(10rem,0.95fr)_minmax(8.5rem,0.75fr)_minmax(10rem,1fr)_auto] lg:items-center"
+              >
                 <div className="flex items-center gap-3">
                   <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-hairline">
                     {student.name.slice(0, 1)}
@@ -568,7 +880,7 @@ function TeacherDashboard({
                     <span className="font-medium text-slate-700">{student.progress}%</span>
                   </div>
                   <div className="h-2 overflow-hidden rounded-lg bg-slate-200">
-                    <div className="h-full rounded-lg bg-blue-600" style={{ width: `${student.progress}%` }} />
+                    <div className="h-full rounded-lg bg-blue-300" style={{ width: `${student.progress}%` }} />
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2 md:justify-end">
@@ -576,44 +888,88 @@ function TeacherDashboard({
                     <CategoryChip key={gap} category={gap} lang={lang} />
                   ))}
                 </div>
-              </div>
+                <span className="inline-flex items-center justify-start gap-1 text-sm font-semibold text-blue-700 md:justify-end">
+                  {lang === "en" ? "Open" : "Відкрити"}
+                  <ArrowRight className="h-4 w-4" aria-hidden />
+                </span>
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function StudentProfileView({
+  lang,
+  studentName,
+  result,
+  primaryGap,
+  secondaryGap,
+  onBack,
+  onOpenScreening,
+  onOpenBrief
+}: {
+  lang: Lang;
+  studentName: string;
+  result: ReturnType<typeof scoreScreening>;
+  primaryGap: CategoryId;
+  secondaryGap: CategoryId;
+  onBack: () => void;
+  onOpenScreening: () => void;
+  onOpenBrief: () => void;
+}) {
+  const text = copy[lang];
+  const primaryBlock = recoveryBlocks[primaryGap];
+  const secondaryBlock = recoveryBlocks[secondaryGap];
+  const student = roster.find(s => s.name === studentName) || roster[0];
+
+  return (
+    <div className="grid gap-6">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+          {text.dashboard}
+        </button>
+        <div className="flex gap-2">
+          <ActionButton icon={<ClipboardList className="h-4 w-4" />} label={text.runScreening} onClick={onOpenScreening} />
+          <SecondaryButton icon={<FileText className="h-4 w-4" />} label={text.openBrief} onClick={onOpenBrief} />
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+          <div className="mb-4 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-950">{text.categoryScores}</h2>
+              <p className="mt-1 text-sm text-slate-500">{student.name} | {studentProfile.context[lang]}</p>
+            </div>
+            <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700">
+              {result.totalCorrect}/10
+            </span>
+          </div>
+          <div className="grid gap-3">
+            {result.categoryResults.map((categoryResult) => (
+              <ScoreRow key={categoryResult.category} result={categoryResult} lang={lang} />
             ))}
           </div>
         </div>
 
-        <div className="grid gap-6">
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-            <div className="mb-4 flex items-center justify-between">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-950">{text.categoryScores}</h2>
-                <p className="mt-1 text-sm text-slate-500">{studentProfile.name} | {studentProfile.context[lang]}</p>
-              </div>
-              <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700">
-                {result.totalCorrect}/10
-              </span>
+        <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2 className="text-xl font-semibold text-slate-950">{text.nextAction}</h2>
+              <p className="mt-1 text-sm leading-6 text-slate-500">{text.restartCopy}</p>
             </div>
-            <div className="grid gap-3">
-              {result.categoryResults.map((categoryResult) => (
-                <ScoreRow key={categoryResult.category} result={categoryResult} lang={lang} />
-              ))}
-            </div>
+            <NotebookPen className="h-5 w-5 shrink-0 text-blue-600" aria-hidden />
           </div>
-
-          <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <h2 className="text-xl font-semibold text-slate-950">{text.nextAction}</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-500">{text.restartCopy}</p>
-              </div>
-              <NotebookPen className="h-5 w-5 shrink-0 text-blue-600" aria-hidden />
-            </div>
-            <div className="mt-4 grid gap-3 md:grid-cols-2">
-              <FocusBlock title={categoryLabel(primaryGap, lang)} block={primaryBlock} lang={lang} />
-              <FocusBlock title={categoryLabel(secondaryGap, lang)} block={secondaryBlock} lang={lang} />
-            </div>
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <FocusBlock title={categoryLabel(primaryGap, lang)} block={primaryBlock} lang={lang} />
+            <FocusBlock title={categoryLabel(secondaryGap, lang)} block={secondaryBlock} lang={lang} />
           </div>
         </div>
-      </section>
+      </div>
 
       <PlanPreview lang={lang} primaryGap={primaryGap} secondaryGap={secondaryGap} />
     </div>
@@ -622,93 +978,61 @@ function TeacherDashboard({
 
 function StudentDashboard({
   lang,
-  result,
-  primaryGap,
-  secondaryGap,
-  tasksGenerated,
   answeredCount,
   onOpenScreening
 }: {
   lang: Lang;
-  result: ReturnType<typeof scoreScreening>;
-  primaryGap: CategoryId;
-  secondaryGap: CategoryId;
-  tasksGenerated: boolean;
   answeredCount: number;
   onOpenScreening: () => void;
 }) {
   const text = copy[lang];
-  const primaryBlock = recoveryBlocks[primaryGap];
-  const secondaryBlock = recoveryBlocks[secondaryGap];
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium text-blue-700">{text.accountSwitch}</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-950">{text.studentViewTitle}</h1>
-            <p className="mt-3 leading-7 text-slate-600">{text.studentViewLead}</p>
+    <div className="mx-auto max-w-3xl pt-8">
+      <section className="rounded-2xl border border-slate-200 bg-white px-6 py-10 text-center shadow-soft sm:px-12 sm:py-16">
+        <span className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-8 ring-blue-50/50">
+          <ClipboardCheck className="h-10 w-10" aria-hidden />
+        </span>
+        <h1 className="mt-8 text-3xl font-bold tracking-tight text-slate-950 sm:text-4xl">
+          {lang === "en" ? "You have a new assignment" : "У вас нове завдання"}
+        </h1>
+        <p className="mx-auto mt-4 max-w-xl text-lg leading-8 text-slate-600">
+          {lang === "en"
+            ? "Your teacher Olena has assigned a short math onboarding quiz. Please complete it to help us find the best restart point for your learning."
+            : "Ваш вчитель Олена призначила короткий вступний тест з математики. Будь ласка, пройдіть його, щоб допомогти нам знайти найкращу точку для продовження навчання."}
+        </p>
+
+        <div className="mx-auto mt-10 max-w-sm rounded-xl border border-slate-200 bg-slate-50 p-6 text-left shadow-sm">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="font-semibold text-slate-900">{text.quickScreening}</span>
+            <span className="text-sm font-medium text-slate-500">{answeredCount}/10</span>
           </div>
-          <span className="flex h-12 w-12 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-            <GraduationCap className="h-6 w-6" aria-hidden />
-          </span>
+          <div className="mb-5 flex flex-wrap items-center gap-3 text-xs font-medium text-slate-500">
+            <div className="flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1">
+              <UserRound className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              <span>{lang === "en" ? "Teacher Olena" : "Вчитель Олена"}</span>
+            </div>
+            <div className="flex items-center gap-1.5 rounded-md bg-slate-100 px-2 py-1">
+              <BookOpenCheck className="h-3.5 w-3.5 text-slate-400" aria-hidden />
+              <span>{lang === "en" ? "Math" : "Математика"}</span>
+            </div>
+          </div>
+          <div className="mb-6 h-2.5 overflow-hidden rounded-full bg-slate-200">
+            <div className="h-full rounded-full bg-blue-300 transition-all duration-500" style={{ width: `${(answeredCount / 10) * 100}%` }} />
+          </div>
+          <button
+            type="button"
+            onClick={onOpenScreening}
+            className="group flex w-full items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3.5 text-sm font-semibold text-blue-700 transition hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-md"
+          >
+            <ClipboardList className="h-5 w-5 transition-transform group-hover:scale-110" aria-hidden />
+            {answeredCount > 0 && answeredCount < 10
+              ? text.continueScreening
+              : answeredCount === 10
+                ? (lang === "en" ? "Review Answers" : "Переглянути відповіді")
+                : text.startScreening}
+          </button>
         </div>
-
-        <div className="mt-6 grid gap-3">
-          <MetricCard icon={<ClipboardCheck className="h-5 w-5" />} label={text.quickScreening} value={`${answeredCount}/10`} detail={`${result.totalCorrect}/10 ${text.resultSnapshot}`} />
-          <MetricCard
-            icon={<BookOpenCheck className="h-5 w-5" />}
-            label={text.restartPoints}
-            value={`${categoryLabel(primaryGap, lang)} + ${categoryLabel(secondaryGap, lang)}`}
-            detail={text.recoveryPlan}
-          />
-        </div>
-
-        <button
-          type="button"
-          onClick={onOpenScreening}
-          className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800"
-        >
-          <ClipboardList className="h-4 w-4" aria-hidden />
-          {answeredCount > 0 ? text.continueScreening : text.startScreening}
-        </button>
-      </section>
-
-      <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-        <div className="flex items-center justify-between gap-3">
-          <div>
-            <h2 className="text-xl font-semibold text-slate-950">{tasksGenerated ? text.aiTasksForStudent : text.noTasksYet}</h2>
-            <p className="mt-1 text-sm text-slate-500">{tasksGenerated ? text.aiDrafted : text.noTasksLead}</p>
-          </div>
-          <Sparkles className="h-5 w-5 text-amber-500" aria-hidden />
-        </div>
-
-        {tasksGenerated ? (
-          <div className="mt-5 grid gap-3">
-            {[primaryBlock, secondaryBlock].map((block) => (
-              <div key={block.category} className="rounded-lg border border-slate-200 bg-slate-50 p-4">
-                <div className="mb-3 flex flex-wrap items-center gap-2">
-                  <CategoryChip category={block.category} lang={lang} />
-                  <span className="text-sm font-medium text-slate-500">{text.todayTasks}</span>
-                </div>
-                <ul className="space-y-2 text-sm leading-6 text-slate-700">
-                  {block.printableExercises[lang].slice(0, 2).map((exercise) => (
-                    <li key={exercise} className="flex gap-2">
-                      <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
-                      <span>{exercise}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="mt-5 rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6 text-center">
-            <Send className="mx-auto h-6 w-6 text-slate-400" aria-hidden />
-            <p className="mt-3 text-sm leading-6 text-slate-500">{text.waitingForRequest}</p>
-          </div>
-        )}
       </section>
     </div>
   );
@@ -726,8 +1050,8 @@ function AiComposer({
   const text = copy[lang];
   const prompt =
     lang === "en"
-      ? "Create 20-minute print-first recovery tasks for Maksym based on percentages and word problems."
-      : "Створи 20-хвилинні завдання для друку для Максима на основі відсотків і текстових задач.";
+      ? "Create 45-minute print-first recovery tasks for Maksym based on percentages and word problems."
+      : "Створи 45-хвилинні завдання для друку для Максима на основі відсотків і текстових задач.";
   const chips = [
     { label: lang === "en" ? "Recovery plan" : "План відновлення", icon: Target, active: true, className: "bg-emerald-100 text-emerald-800 ring-1 ring-emerald-200" },
     { label: lang === "en" ? "Worksheet" : "Аркуш вправ", icon: ClipboardCheck, active: false, className: "bg-amber-100 text-amber-800 ring-1 ring-amber-200" },
@@ -756,11 +1080,18 @@ function AiComposer({
         <button
           type="button"
           onClick={onGenerateTasks}
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white shadow-md transition hover:-translate-y-0.5 hover:bg-blue-700 hover:shadow-lg"
+          disabled={isGeneratingTasks}
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-blue-200 bg-blue-50 text-blue-700 shadow-md transition hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           aria-label={text.generateAiTasks}
           title={text.generateAiTasks}
         >
-          {tasksGenerated ? <CheckCircle2 className="h-5 w-5" aria-hidden /> : <Send className="h-5 w-5" aria-hidden />}
+          {isGeneratingTasks ? (
+            <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-700" aria-hidden />
+          ) : tasksGenerated ? (
+            <CheckCircle2 className="h-5 w-5" aria-hidden />
+          ) : (
+            <Send className="h-5 w-5" aria-hidden />
+          )}
         </button>
       </div>
       <p className="mt-3 text-xs font-medium text-slate-500">{tasksGenerated ? text.aiDrafted : text.waitingForRequest}</p>
@@ -811,7 +1142,7 @@ function ScreeningView({
       <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="rounded-lg bg-slate-950 px-3 py-1 text-sm font-semibold text-white">
+            <span className="rounded-lg border border-blue-100 bg-blue-50 px-3 py-1 text-sm font-semibold text-blue-700">
               {text.question} {currentQuestionIndex + 1}/10
             </span>
             <CategoryChip category={currentQuestion.category} lang={lang} />
@@ -823,7 +1154,7 @@ function ScreeningView({
         </div>
 
         <div className="mb-6 h-2 overflow-hidden rounded-lg bg-slate-100">
-          <div className="h-full rounded-lg bg-blue-600 transition-all" style={{ width: `${(answeredCount / questions.length) * 100}%` }} />
+          <div className="h-full rounded-lg bg-blue-300 transition-all" style={{ width: `${(answeredCount / questions.length) * 100}%` }} />
         </div>
 
         <h2 className="text-2xl font-semibold leading-tight text-slate-950">{currentQuestion.prompt[lang]}</h2>
@@ -844,7 +1175,7 @@ function ScreeningView({
               >
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${
-                    active ? "bg-blue-600 text-white" : "bg-slate-100 text-slate-600"
+                    active ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-600"
                   }`}
                 >
                   {option.id}
@@ -884,12 +1215,14 @@ function TeacherBriefView({
   result,
   primaryGap,
   secondaryGap,
+  setupData,
   onBack
 }: {
   lang: Lang;
   result: ReturnType<typeof scoreScreening>;
   primaryGap: CategoryId;
   secondaryGap: CategoryId;
+  setupData: { grade: string; dailyTime: string; classroomMode: string; techMode: string };
   onBack: () => void;
 }) {
   const text = copy[lang];
@@ -910,7 +1243,7 @@ function TeacherBriefView({
         <button
           type="button"
           onClick={() => window.print()}
-          className="inline-flex items-center gap-2 rounded-lg bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
+          className="inline-flex items-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 transition hover:bg-blue-100"
         >
           <Printer className="h-4 w-4" aria-hidden />
           {text.printBrief}
@@ -923,16 +1256,16 @@ function TeacherBriefView({
             <p className="text-sm font-medium text-blue-700">EduRecovery UA</p>
             <h1 className="mt-2 text-3xl font-semibold text-slate-950">{text.teacherRecoveryBrief}</h1>
             <p className="mt-2 text-slate-600">
-              {studentProfile.name} | {lang === "en" ? "Grade" : "Клас"} {studentProfile.grade} | {studentProfile.age} | {studentProfile.language[lang]}
+              {studentProfile.name} | {lang === "en" ? "Grade" : "Клас"} {setupData.grade} | {studentProfile.age} | {studentProfile.language[lang]}
             </p>
           </div>
-          <img src="/logo.PNG" alt="EduRecovery UA logo" className="h-16 w-16 rounded-lg object-cover" />
+          <img src="/logosm.png" alt="EduRecovery UA logo" className="h-16 w-32 object-contain" />
         </div>
 
         <div className="grid gap-5 py-6 md:grid-cols-3">
           <BriefStat label={text.resultSnapshot} value={`${result.totalCorrect}/${result.totalQuestions}`} />
           <BriefStat label={text.restartPoints} value={`${categoryLabel(primaryGap, lang)} + ${categoryLabel(secondaryGap, lang)}`} />
-          <BriefStat label={text.setup} value={lang === "en" ? "20 min/day" : "20 хв/день"} />
+          <BriefStat label={text.setup} value={`${setupData.dailyTime} | ${setupData.classroomMode === "disrupted" ? text.modeDisrupted : text.modeNormal}`} />
         </div>
 
         <div className="grid gap-5 md:grid-cols-2">
@@ -958,13 +1291,25 @@ function TeacherBriefView({
         <section className="mt-5 rounded-lg border border-slate-200 p-4">
           <h2 className="text-lg font-semibold text-slate-950">{text.teacherRecommendations}</h2>
           <div className="mt-3 grid gap-3 md:grid-cols-2">
-            {[primaryBlock, secondaryBlock].map((block) => (
-              <div key={block.category} className="rounded-lg bg-slate-50 p-3">
-                <CategoryChip category={block.category} lang={lang} />
-                <p className="mt-3 text-sm leading-6 text-slate-600">{block.teacherExplanation[lang]}</p>
-                <p className="mt-2 text-sm font-medium text-slate-700">{text.lowTech}: {block.lowTechAdaptation[lang]}</p>
-              </div>
-            ))}
+            {[primaryBlock, secondaryBlock].map((block) => {
+              const res = result.categoryResults.find((r) => r.category === block.category);
+              const confidenceStyle = res?.correct === 0 ? "border-red-200 bg-red-50 text-red-700" : "border-yellow-200 bg-yellow-50 text-yellow-700";
+
+              return (
+                <div key={block.category} className="rounded-lg bg-slate-50 p-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <CategoryChip category={block.category} lang={lang} />
+                    {res && (
+                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${confidenceStyle}`}>
+                        {res.confidence[lang]}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-3 text-sm leading-6 text-slate-600">{block.teacherExplanation[lang]}</p>
+                  <p className="mt-2 text-sm font-medium text-slate-700">{text.lowTech}: {block.lowTechAdaptation[lang]}</p>
+                </div>
+              );
+            })}
           </div>
         </section>
 
@@ -1009,7 +1354,7 @@ function TeacherBriefView({
 
 function PlanPreview({ lang, primaryGap, secondaryGap }: { lang: Lang; primaryGap: CategoryId; secondaryGap: CategoryId }) {
   const text = copy[lang];
-  const previewDays = planBlueprint.slice(0, 6);
+  const planDays = planBlueprint;
 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
@@ -1023,7 +1368,7 @@ function PlanPreview({ lang, primaryGap, secondaryGap }: { lang: Lang; primaryGa
         <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700">14 days</span>
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {previewDays.map((day) => (
+        {planDays.map((day) => (
           <PlanDayRow key={day.day} day={day} lang={lang} primaryGap={primaryGap} secondaryGap={secondaryGap} compact />
         ))}
       </div>
@@ -1111,16 +1456,112 @@ function ScoreRow({ result, lang }: { result: ReturnType<typeof scoreScreening>[
   );
 }
 
-function MetricCard({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
+function MetricCard({
+  icon,
+  label,
+  value,
+  detail,
+  tone
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  detail: string;
+  tone: "blue" | "red" | "yellow" | "green";
+}) {
+  const tones = {
+    blue: { badge: "border-blue-100 bg-blue-50 text-blue-700", bar: "bg-blue-500" },
+    red: { badge: "border-red-100 bg-red-50 text-red-700", bar: "bg-red-500" },
+    yellow: { badge: "border-yellow-100 bg-yellow-50 text-yellow-700", bar: "bg-yellow-500" },
+    green: { badge: "border-green-100 bg-green-50 text-green-700", bar: "bg-green-500" }
+  };
+
   return (
-    <div className="relative overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg">
+    <div className="relative min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white p-4 shadow-soft transition hover:-translate-y-0.5 hover:shadow-lg">
+      <div className={`absolute inset-x-0 top-0 h-1 ${tones[tone].bar}`} />
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="text-sm font-medium text-slate-500">{label}</p>
-          <p className="mt-2 break-words text-2xl font-semibold text-slate-950">{value}</p>
+          <p className="mt-2 break-words text-xl font-semibold leading-tight text-slate-950 sm:text-2xl">{value}</p>
           <p className="mt-2 text-sm leading-5 text-slate-500">{detail}</p>
         </div>
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-slate-100 text-slate-700">{icon}</span>
+        <span className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border ${tones[tone].badge}`}>{icon}</span>
+      </div>
+    </div>
+  );
+}
+
+function TeachingStep({ step, title, detail }: { step: string; title: string; detail: string }) {
+  return (
+    <div className="grid grid-cols-[2rem_1fr] gap-3 rounded-lg border border-blue-100 bg-white p-3 shadow-hairline">
+      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-100 text-sm font-bold text-blue-700">{step}</span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-slate-900">{title}</span>
+        <span className="mt-1 block break-words text-sm leading-5 text-slate-600">{detail}</span>
+      </span>
+    </div>
+  );
+}
+
+function PriorityStudentRow({
+  student,
+  lang,
+  onSelectStudent
+}: {
+  student: (typeof roster)[number];
+  lang: Lang;
+  onSelectStudent: (name: string) => void;
+}) {
+  const supportLabel =
+    student.progress < 60
+      ? lang === "en"
+        ? "Needs teacher pullout"
+        : "Потрібна мала група"
+      : lang === "en"
+        ? "Check during practice"
+        : "Перевірити під час практики";
+
+  return (
+    <button
+      type="button"
+      onClick={() => onSelectStudent(student.name)}
+      className="grid w-full gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left shadow-hairline transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-md"
+    >
+      <span className="flex min-w-0 items-center gap-3">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-hairline">
+          {student.name[0]}
+        </span>
+        <span className="min-w-0">
+          <span className="block font-semibold text-slate-950">{student.name}</span>
+          <span className="mt-1 flex flex-wrap gap-2">
+            {student.gaps.map((gap) => (
+              <CategoryChip key={gap} category={gap} lang={lang} />
+            ))}
+          </span>
+        </span>
+      </span>
+      <span className="inline-flex w-full items-center justify-center rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700">
+        {supportLabel}
+      </span>
+    </button>
+  );
+}
+
+function ClassGapStrip({ category, count, lang }: { category: CategoryId; count: number; lang: Lang }) {
+  const percent = Math.round((count / roster.length) * 100);
+  const visual = categoryVisuals[category];
+
+  return (
+    <div className="min-w-0 rounded-lg border border-white/80 bg-white p-3 shadow-hairline">
+      <div className="mb-1 flex items-center justify-between gap-3 text-xs">
+        <span className="flex min-w-0 items-center gap-2 font-semibold text-slate-800">
+          <span className={`h-2.5 w-2.5 shrink-0 rounded-full ${visual.dot}`} />
+          <span className="truncate">{categoryLabel(category, lang)}</span>
+        </span>
+        <span className="shrink-0 font-semibold text-slate-600">{count}/{roster.length}</span>
+      </div>
+      <div className={`mt-2 h-2.5 overflow-hidden rounded-lg ${visual.track}`}>
+        <div className={`h-full rounded-lg ${visual.bar}`} style={{ width: `${percent}%` }} />
       </div>
     </div>
   );
@@ -1155,7 +1596,7 @@ function InfoChip({ icon, label }: { icon: React.ReactNode; label: string }) {
 
 function CategoryChip({ category, lang }: { category: CategoryId; lang: Lang }) {
   return (
-    <span className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${categoryMeta[category].tone}`}>
+    <span className={`inline-flex items-center rounded-lg border px-2.5 py-1 text-xs font-semibold ${categoryVisuals[category].chip}`}>
       {categoryMeta[category].shortLabel[lang]}
     </span>
   );
@@ -1177,7 +1618,7 @@ function ActionButton({
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex items-center justify-center gap-2 rounded-lg bg-slate-950 px-4 py-3 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-300"
+      className="inline-flex items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm font-semibold text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:border-slate-200 disabled:bg-slate-100 disabled:text-slate-400"
     >
       {icon}
       {label}
@@ -1206,6 +1647,139 @@ function SecondaryButton({
       {icon}
       {label}
     </button>
+  );
+}
+
+function TeacherSetupView({
+  lang,
+  setupData,
+  setSetupData,
+  onComplete,
+  onDemoFill
+}: {
+  lang: Lang;
+  setupData: { grade: string; dailyTime: string; classroomMode: string; techMode: string };
+  setSetupData: (data: { grade: string; dailyTime: string; classroomMode: string; techMode: string }) => void;
+  onComplete: () => void;
+  onDemoFill: () => void;
+}) {
+  const text = copy[lang];
+
+  return (
+    <section className="mx-auto w-full max-w-2xl">
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+        <div className="mb-6 flex flex-col items-center text-center">
+          <span className="flex h-20 w-40 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+            <img src="/logosm.png" alt="EduRecovery UA logo" className="h-full w-full object-contain" />
+          </span>
+          <h1 className="mt-4 text-2xl font-bold text-slate-950">{text.setupTitle}</h1>
+          <p className="mt-2 text-slate-600">{text.setupLead}</p>
+        </div>
+
+        <div className="grid gap-6">
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-slate-900">{text.gradeSelect}</label>
+            <div className="flex flex-wrap gap-2">
+              {["5", "6", "7", "8"].map((grade) => (
+                <button
+                  key={grade}
+                  type="button"
+                  onClick={() => setSetupData({ ...setupData, grade })}
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
+                    setupData.grade === grade ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {grade}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-slate-900">{text.dailyTimeSelect}</label>
+            <div className="flex flex-wrap gap-2">
+              {["45 min", "60 min", "90 min"].map((time) => (
+                <button
+                  key={time}
+                  type="button"
+                  onClick={() => setSetupData({ ...setupData, dailyTime: `${time}/day` })}
+                  className={`rounded-lg border px-4 py-2 text-sm font-medium transition ${
+                    setupData.dailyTime === `${time}/day` ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                  }`}
+                >
+                  {time}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-slate-900">{text.classroomMode}</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSetupData({ ...setupData, classroomMode: "disrupted" })}
+                className={`flex-1 rounded-lg border px-4 py-3 text-center text-sm font-medium transition ${
+                  setupData.classroomMode === "disrupted" ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {text.modeDisrupted}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSetupData({ ...setupData, classroomMode: "normal" })}
+                className={`flex-1 rounded-lg border px-4 py-3 text-center text-sm font-medium transition ${
+                  setupData.classroomMode === "normal" ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {text.modeNormal}
+              </button>
+            </div>
+          </div>
+
+          <div className="grid gap-2">
+            <label className="text-sm font-semibold text-slate-900">{text.techMode}</label>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setSetupData({ ...setupData, techMode: "low-tech" })}
+                className={`flex-1 rounded-lg border px-4 py-3 text-center text-sm font-medium transition ${
+                  setupData.techMode === "low-tech" ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {text.techLow}
+              </button>
+              <button
+                type="button"
+                onClick={() => setSetupData({ ...setupData, techMode: "digital" })}
+                className={`flex-1 rounded-lg border px-4 py-3 text-center text-sm font-medium transition ${
+                  setupData.techMode === "digital" ? "border-blue-600 bg-blue-50 text-blue-800" : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+                }`}
+              >
+                {text.techDigital}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-col gap-3">
+            <button
+              type="button"
+              onClick={onComplete}
+              className="w-full rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-base font-semibold text-blue-700 shadow-sm transition hover:bg-blue-100"
+            >
+              {text.startRecovery}
+            </button>
+            <button
+              type="button"
+              onClick={onDemoFill}
+              className="w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-600 transition hover:bg-slate-50"
+            >
+              {text.demoDataFill}
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 

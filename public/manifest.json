@@ -1,7 +1,7 @@
 {
-    "name": "Uczmy.pl - Platforma Edukacyjna",
-    "short_name": "Uczmy.pl",
-    "description": "Nowoczesna platforma edukacyjna dla szkół językowych i korepetytorów. AI-powered learning.",
+    "name": "EduRecovery - Platforma Wspierania Edukacji",
+    "short_name": "EduRecovery",
+    "description": "Nowoczesna platforma edukacyjna do wspierania procesu nauki i nadrabiania zaległości szkolnych.",
     "start_url": "/dashboard",
     "display": "standalone",
     "background_color": "#0f172a",

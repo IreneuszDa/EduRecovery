@@ -19,9 +19,8 @@ export default function Header({ isScrolled }: HeaderProps) {
         <>
             <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-md' : 'bg-transparent'}`}>
                 <div className="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 py-3">
-                    <motion.a href="/" className="flex items-center space-x-3" whileHover={{ scale: 1.05 }}>
-                        <Image src="/logo1t.png" alt="Uczmy.pl Logo" width={40} height={40} className="h-10 w-10" />
-                        <span className="text-2xl sm:text-3xl font-bold text-gray-800 dark:text-gray-200">Uczmy.pl</span>
+                    <motion.a href="/" className="flex items-center" whileHover={{ scale: 1.05 }}>
+                        <Image src="/logosm.png" alt="EduRecovery UA logo" width={186} height={100} className="h-12 w-auto" priority />
                     </motion.a>
 
                     <nav className="hidden md:flex items-center space-x-2">

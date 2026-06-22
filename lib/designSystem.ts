@@ -1,5 +1,5 @@
 // @/lib/designSystem.ts
-// Premium "Billion Dollar" Design System for Uczmy.pl
+// Premium "Billion Dollar" Design System for EduRecovery
 
 /**
  * Color palette supporting white-label theming

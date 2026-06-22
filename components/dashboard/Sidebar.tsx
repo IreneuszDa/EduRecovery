@@ -266,8 +266,7 @@ const Sidebar = ({ isVisible, isHistoryLoading, chatSessions, session, onReportB
                 <div className="flex flex-col flex-1 min-w-0 overflow-x-hidden p-5 whitespace-nowrap">
                     <div className="flex-shrink-0">
                         <Link href="/dashboard" onClick={handleNewChatClick} className="flex items-center space-x-3 px-2 mb-6 group">
-                            <img src="/logo1t.png" alt="Logo Uczmy.pl" className="h-10 w-10 flex-shrink-0" />
-                            <span className="text-2xl font-bold text-gray-800 dark:text-gray-100 tracking-tight">Uczmy.pl</span>
+                            <img src="/logo1t.png" alt="Logo EduRecovery" className="h-10 w-10 flex-shrink-0" />
                         </Link>
                     </div>
 
