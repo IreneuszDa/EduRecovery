@@ -259,9 +259,15 @@ const copy = {
 
 const roster = [
   { name: "Maksym", grade: "6", progress: 62, status: "active", gaps: ["percentages", "word-problems"] as CategoryId[] },
-  { name: "Iryna", grade: "6", progress: 76, status: "monitor", gaps: ["fractions"] as CategoryId[] },
-  { name: "Sofia", grade: "7", progress: 84, status: "stable", gaps: ["geometry"] as CategoryId[] },
-  { name: "Danylo", grade: "6", progress: 58, status: "active", gaps: ["equations", "word-problems"] as CategoryId[] }
+  { name: "Iryna", grade: "6", progress: 76, status: "monitor", gaps: ["fractions", "geometry"] as CategoryId[] },
+  { name: "Sofia", grade: "7", progress: 88, status: "stable", gaps: ["geometry"] as CategoryId[] },
+  { name: "Danylo", grade: "6", progress: 45, status: "at-risk", gaps: ["equations", "word-problems", "fractions"] as CategoryId[] },
+  { name: "Kateryna", grade: "5", progress: 92, status: "stable", gaps: [] as CategoryId[] },
+  { name: "Artem", grade: "7", progress: 55, status: "active", gaps: ["percentages", "equations"] as CategoryId[] },
+  { name: "Veronika", grade: "5", progress: 71, status: "monitor", gaps: ["word-problems"] as CategoryId[] },
+  { name: "Bohdan", grade: "6", progress: 38, status: "at-risk", gaps: ["fractions", "percentages", "word-problems"] as CategoryId[] },
+  { name: "Polina", grade: "7", progress: 81, status: "stable", gaps: ["equations"] as CategoryId[] },
+  { name: "Matviy", grade: "5", progress: 65, status: "monitor", gaps: ["geometry", "fractions"] as CategoryId[] }
 ];
 
 export function EduRecoveryApp() {
