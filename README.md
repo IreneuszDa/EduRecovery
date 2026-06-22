@@ -1,48 +1,50 @@
-# EduRecovery Teacher Assistant
+# EduRecovery UA
 
-A teacher-first digital assistant that helps educators quickly identify learning gaps caused by disrupted schooling and generate a practical 14-day recovery plan with printable exercises.
+Teacher-first recovery assistant for disrupted Ukrainian learning contexts.
 
-## Overview
+This repository now uses the imported `Uczmy.pl` codebase as a UI/source foundation while keeping the EduRecovery MVP focused on:
 
-EduRecovery is designed to support teachers and volunteer educators who need immediate, low-friction tools to assess students returning to class after interruptions in their education. It specifically targets students aged 11-14 (Grades 5-6) in Mathematics.
+- teacher and student role switching without login,
+- English and Ukrainian UI,
+- 10-question math quick screening,
+- likely learning gap scoring,
+- 14-day recovery plan,
+- printable Teacher Recovery Brief,
+- low-tech and print-first classroom support.
 
-The application evaluates students using a quick screening assessment. Rather than providing generic feedback, **all diagnostic outputs and recovery recommendations are mapped directly to the official Ukrainian Model Curriculum (NUSH) for Mathematics (O.S. Ister)**. This ensures that the generated recovery plans are officially compliant and immediately actionable for Ukrainian educators.
+## Active App
 
-## Features
+The public Next.js app is intentionally narrow for the hackathon MVP:
 
-- **Teacher-First Workflow:** Built for the educator, generating a comprehensive "Teacher Recovery Brief".
-- **Curriculum-Aligned Assessment:** 10-question math screening directly linked to the official Ukrainian curriculum.
-- **Automated Gap Identification:** Identifies specific curriculum expectations the student has missed (e.g., "[MATH-5-PERC] Understands percentage as a hundredth part of a value").
-- **14-Day Recovery Plan:** Automatically generates a structured, day-by-day intervention plan.
-- **Low-Tech Support:** Provides a print-ready view for offline classroom use.
-- **Bilingual Support:** Interface and data support both English and Ukrainian.
+- `app/page.tsx` renders `components/edu-recovery-app.tsx`.
+- `lib/education-data.ts` contains the static screening and recovery content.
+- `lib/scoring.ts` contains deterministic scoring.
+- `public/logo.PNG` is the EduRecovery UA logo.
+
+## Imported Uczmy.pl Code
+
+The Uczmy.pl source has been imported into this repository. Backend-heavy routes that require auth, MongoDB, Google Drive, or mail configuration were moved out of the active Next `app/` router into:
+
+```txt
+uczmy-imported/app-routes/
+```
+
+Shared Uczmy-style components, assets, models, and utilities remain available in the repo for reuse.
 
 ## Development
 
-This is a React MVP built with TypeScript and Vite. It runs completely client-side with no backend required for the demo.
+```bash
+npm install
+npm run dev
+npm run build
+```
 
-### Running Locally
+Open:
 
-1. Install dependencies:
-   ```bash
-   npm install
-   ```
-2. Start the development server:
-   ```bash
-   npm run dev
-   ```
-3. Build for production:
-   ```bash
-   npm run build
-   ```
+```txt
+http://localhost:3000
+```
 
-## Documentation
+## Notes
 
-For more context on the product and data model, see the `docs/` directory:
-- `docs/product-brief.md`
-- `docs/data-preparation-brief.md`
-- `docs/demo-scenario.md`
-
-## Hackathon Context
-
-This project was built for the Day One Ukraine hackathon under the **Digital Assistant for Educators** track.
+No `.env.local`, `.git`, `node_modules`, or `.next` artifacts were copied from the reference repo.

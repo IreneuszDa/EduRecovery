@@ -1,0 +1,142 @@
+/* Animation Player Styles */
+.animation-player {
+    --primary-color: #3b82f6;
+    --primary-hover: #2563eb;
+    --bg-color: #f8fafc;
+    --bg-color-dark: #1e293b;
+    --text-color: #334155;
+    --text-color-dark: #e2e8f0;
+    --border-color: #e2e8f0;
+    --border-color-dark: #334155;
+}
+
+.dark .animation-player {
+    --bg-color: var(--bg-color-dark);
+    --text-color: var(--text-color-dark);
+    --border-color: var(--border-color-dark);
+}
+
+/* Custom Video Controls */
+.video-controls {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.video-container:hover .video-controls {
+    opacity: 1;
+}
+
+/* Progress bar animations */
+@keyframes pulse-progress {
+    0% {
+        background-position: 0% 50%;
+    }
+
+    50% {
+        background-position: 100% 50%;
+    }
+
+    100% {
+        background-position: 0% 50%;
+    }
+}
+
+.progress-animated {
+    background-size: 200% 200%;
+    background-image: linear-gradient(90deg, var(--primary-color) 0%, #818cf8 50%, var(--primary-color) 100%);
+    animation: pulse-progress 2s ease infinite;
+}
+
+/* Loading spinner animation */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.spinner {
+    animation: spin 1.2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    border-color: var(--primary-color) transparent transparent transparent;
+}
+
+/* Voice-over script highlight animation */
+@keyframes highlight-text {
+    0% {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+
+    50% {
+        background-color: rgba(59, 130, 246, 0.2);
+    }
+
+    100% {
+        background-color: rgba(59, 130, 246, 0.1);
+    }
+}
+
+.voiceover-highlight {
+    animation: highlight-text 3s ease infinite;
+    border-radius: 0.25rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Fullscreen smooth transition */
+.fullscreen-transition {
+    transition: all 0.3s ease;
+}
+
+/* Enhanced buttons */
+.control-button {
+    transition: all 0.15s ease;
+}
+
+.control-button:hover {
+    transform: scale(1.1);
+    background-color: rgba(255, 255, 255, 0.2);
+}
+
+.control-button:active {
+    transform: scale(0.95);
+}
+
+/* Volume slider */
+.volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 2px;
+    outline: none;
+}
+
+.volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+}
+
+.volume-slider::-moz-range-thumb {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: white;
+    cursor: pointer;
+    border: none;
+}
+
+/* Keyboard shortcut hint */
+.keyboard-hint {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+    border-radius: 2px;
+    background-color: rgba(255, 255, 255, 0.1);
+    margin-left: 0.5rem;
+}

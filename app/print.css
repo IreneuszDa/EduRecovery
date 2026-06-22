@@ -1,0 +1,90 @@
+/*
+PRINT STYLESHEET
+
+*/
+
+@media screen {
+    .printable-area {
+        display: none;
+    }
+}
+
+@media print {
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .no-print {
+        display: none !important;
+    }
+
+    .break-inside-avoid {
+        break-inside: avoid;
+    }
+
+    body * {
+        visibility: hidden;
+    }
+
+    .printable-area,
+    .printable-area * {
+        visibility: visible;
+        box-shadow: none !important;
+    }
+
+    .printable-area {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 15mm;
+    }
+
+    /* --- Conditional Answer Visibility --- */
+
+    .print-answer {
+        display: none !important;
+    }
+
+    body.print-with-answers .print-answer {
+        display: block !important;
+    }
+
+    body.print-with-answers .print-answer-inline,
+    body.print-with-answers .print-answer-mc-indicator {
+        /* ADDED: Ensure indicator is inline */
+        display: inline !important;
+    }
+
+    body.print-with-answers .print-answer-flex {
+        display: flex !important;
+    }
+
+
+    /* --- Answer Key Styling --- */
+
+    /*
+  THIS IS THE FIX:
+  - The ::before pseudo-element adds the checkmark.
+  - A space is included in 'content' and margin-left is used to create padding.
+*/
+    body.print-with-answers .print-answer-mc-indicator::before {
+        content: '✔';
+        color: #16a34a;
+        /* Green checkmark */
+        font-weight: bold;
+        margin-left: 0.75rem;
+        /* Space between text and checkmark */
+    }
+
+    .tf-box {
+        border: 1px solid #000;
+        width: 20px;
+        height: 20px;
+        margin-right: 10px;
+        display: inline-block;
+    }
+
+}
