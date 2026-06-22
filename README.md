@@ -1,50 +1,52 @@
 # EduRecovery UA
 
-Teacher-first recovery assistant for disrupted Ukrainian learning contexts.
+Teacher-first recovery assistant for disrupted Ukrainian learning contexts. Built for the **Day One Ukraine Hackathon**.
 
-This repository now uses the imported `Uczmy.pl` codebase as a UI/source foundation while keeping the EduRecovery MVP focused on:
+## Overview
 
-- teacher and student role switching without login,
-- English and Ukrainian UI,
-- 10-question math quick screening,
-- likely learning gap scoring,
-- 14-day recovery plan,
-- printable Teacher Recovery Brief,
-- low-tech and print-first classroom support.
+EduRecovery UA is a lightweight, low-tech digital assistant that helps Ukrainian educators identify learning gaps and generate practical recovery plans in under five minutes. Designed specifically for disrupted and under-resourced education settings, it removes the complexity of traditional AI tools by offering a guided, no-prompt interface. 
 
-## Active App
+The MVP focuses on one critical workflow: **Learning Gap Diagnostic & Lesson Recovery**. It is built to directly improve the quality of the educational process, even when educators have minimal experience with technology.
 
-The public Next.js app is intentionally narrow for the hackathon MVP:
+## Hackathon Context & Impact
 
-- `app/page.tsx` renders `components/edu-recovery-app.tsx`.
-- `lib/education-data.ts` contains the static screening and recovery content.
-- `lib/scoring.ts` contains deterministic scoring.
-- `public/logo.PNG` is the EduRecovery UA logo.
+Our solution directly addresses the hackathon's core evaluation criteria:
 
-## Imported Uczmy.pl Code
+- **Problem Solving & Ukraine Relevance:** Schools face unstable internet, frequent disruption, and students with learning gaps. EduRecovery provides immediate, measurable remediation by identifying math gaps and generating a 14-day recovery plan tailored for disrupted classrooms.
+- **Technology Fit:** The interface reduces cognitive load. No complex prompt engineering is required. It's designed to be low-friction, bilingual (English and Ukrainian), and accessible.
+- **Feasibility & Deployment:** Requires no login for teacher and student role switching. It's built as a simple Next.js application that can be easily piloted in schools without deep IT integration.
+- **Innovation:** The innovation lies in workflow design and context sensitivity. We've prioritized a "print-first" and low-tech classroom support model, ensuring teachers can export a clean, printable Teacher Recovery Brief if the internet or projector is unavailable.
 
-The Uczmy.pl source has been imported into this repository. Backend-heavy routes that require auth, MongoDB, Google Drive, or mail configuration were moved out of the active Next `app/` router into:
+## Features
 
-```txt
-uczmy-imported/app-routes/
-```
+- **Teacher & Student Roles:** Instant switching without complex authentication.
+- **Bilingual Interface:** Full support for English and Ukrainian.
+- **Quick Diagnostic:** 10-question math screening to rapidly assess student levels.
+- **Automated Scoring:** Deterministic scoring to identify likely learning gaps.
+- **Actionable Recovery:** Generates a structured 14-day recovery plan.
+- **Print-First Support:** Exportable Teacher Recovery Briefs for offline classroom use.
 
-Shared Uczmy-style components, assets, models, and utilities remain available in the repo for reuse.
+## Development Setup
 
-## Development
+The application is built using Next.js and React.
+
+### Installation
 
 ```bash
 npm install
+```
+
+### Running Locally
+
+```bash
 npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
+
+### Building for Production
+
+```bash
 npm run build
+npm run start
 ```
-
-Open:
-
-```txt
-http://localhost:3000
-```
-
-## Notes
-
-No `.env.local`, `.git`, `node_modules`, or `.next` artifacts were copied from the reference repo.
