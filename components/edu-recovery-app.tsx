@@ -47,7 +47,7 @@ import {
 import { type AnswerMap, categoryLabel, scoreScreening } from "@/lib/scoring";
 
 type Role = "teacher" | "student";
-type View = "dashboard" | "screening" | "brief" | "setup" | "student-profile";
+type View = "dashboard" | "screening" | "brief" | "setup" | "student-profile" | "manual-input";
 
 const categoryVisuals: Record<
   CategoryId,
@@ -155,9 +155,14 @@ const copy = {
       "Maksym completed a quick screening to identify a practical restart point after disrupted schooling.",
     restartCopy:
       "Start with focused work on the primary gap. Keep sessions short and practical, then integrate the second topic in week two.",
-    parentSummary: "Optional parent summary",
+    parentSummary: "Teacher Action Brief",
     parentCopy:
       "Maksym completed a short math check-up. The goal is to find where support will help most. A 14-day plan will focus on the clearest restart points.",
+    inputPaperResults: "Input paper results",
+    groupingRecommendations: "Grouping Recommendations",
+    groupA: "Group A (5 students): Needs fractions review. Generate worksheet.",
+    groupB: "Group B (12 students): Can move forward.",
+    lowBandwidth: "Low-bandwidth / Disrupted mode",
     accountSwitch: "Account switch",
     setup: "Teacher setup",
     setupTitle: "Set up the recovery context",
@@ -237,9 +242,14 @@ const copy = {
       "Максим пройшов швидкий скринінг, щоб визначити практичну точку відновлення після перерв у навчанні.",
     restartCopy:
       "Почніть із цільової роботи над основною прогалиною. Нехай заняття будуть короткими й практичними, а другу тему інтегруйте на другому тижні.",
-    parentSummary: "Підсумок для батьків",
+    parentSummary: "Витичні для вчителя",
     parentCopy:
       "Максим пройшов коротку перевірку з математики. Мета - зрозуміти, де підтримка допоможе найбільше. 14-денний план зосередиться на найчіткіших точках відновлення.",
+    inputPaperResults: "Ввести результати з паперу",
+    groupingRecommendations: "Рекомендації для груп",
+    groupA: "Група А (5 учнів): Потребує повторення дробів. Згенеруйте завдання.",
+    groupB: "Група Б (12 учнів): Може йти далі за матеріалом.",
+    lowBandwidth: "Режим низького трафіку / без Інтернету",
     accountSwitch: "Зміна акаунта",
     setup: "Налаштування вчителя",
     setupTitle: "Налаштуйте контекст відновлення",
@@ -280,6 +290,7 @@ export function EduRecoveryApp() {
   const [tasksGenerated, setTasksGenerated] = useState(false);
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isLowBandwidth, setIsLowBandwidth] = useState(false);
 
   const [setupData, setSetupData] = useState({
     grade: "6",
@@ -311,7 +322,16 @@ export function EduRecoveryApp() {
   const workspaceLabel = lang === "en" ? "workspace" : "простір";
 
   const content =
-    view === "setup" ? (
+    view === "manual-input" ? (
+      <ManualInputView
+        lang={lang}
+        onBack={() => setView("dashboard")}
+        onGenerate={() => {
+          setAnswers(demoAnswers);
+          setView("brief");
+        }}
+      />
+    ) : view === "setup" ? (
       <TeacherSetupView
         lang={lang}
         setupData={setupData}
@@ -373,6 +393,7 @@ export function EduRecoveryApp() {
         isGeneratingTasks={isGeneratingTasks}
         onGenerateTasks={handleGenerateTasks}
         onOpenScreening={() => setView("screening")}
+        onOpenManualInput={() => setView("manual-input")}
         onOpenBrief={() => setView("brief")}
         onSelectStudent={(name) => {
           setSelectedStudent(name);
@@ -388,7 +409,7 @@ export function EduRecoveryApp() {
     );
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950">
+    <main className={`min-h-screen bg-slate-50 text-slate-950 ${isLowBandwidth ? "low-bandwidth-mode" : ""}`}>
       <div className="flex min-h-screen">
         {isMobileMenuOpen && (
           <div 
@@ -442,7 +463,17 @@ export function EduRecoveryApp() {
               </div>
             </div>
             <div className="flex flex-wrap items-center justify-end gap-2">
-
+              <div className="flex items-center gap-2 px-2 border-r border-slate-200">
+                <label className="text-xs font-semibold text-slate-600 flex items-center gap-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={isLowBandwidth}
+                    onChange={(e) => setIsLowBandwidth(e.target.checked)}
+                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                  />
+                  {text.lowBandwidth}
+                </label>
+              </div>
               <SegmentedControl
                 label={text.language}
                 icon={<Languages className="h-4 w-4" aria-hidden />}
@@ -697,6 +728,7 @@ function TeacherDashboard({
   setupData: { grade: string; dailyTime: string; classroomMode: string; techMode: string };
   onGenerateTasks: () => void;
   onOpenScreening: () => void;
+  onOpenManualInput: () => void;
   onOpenBrief: () => void;
   onSelectStudent: (name: string) => void;
 }) {
@@ -750,6 +782,7 @@ function TeacherDashboard({
             </div>
             <div className="grid min-w-56 gap-2">
               <ActionButton icon={<ClipboardList className="h-4 w-4" />} label={text.runScreening} onClick={onOpenScreening} />
+              <SecondaryButton icon={<FileText className="h-4 w-4" />} label={text.inputPaperResults} onClick={onOpenManualInput} />
               <SecondaryButton icon={<FileText className="h-4 w-4" />} label={text.openBrief} onClick={onOpenBrief} disabled={!isComplete} />
             </div>
           </div>
@@ -840,6 +873,23 @@ function TeacherDashboard({
             {studentsNeedingSupport.map((student) => (
               <PriorityStudentRow key={student.name} student={student} lang={lang} onSelectStudent={onSelectStudent} />
             ))}
+          </div>
+
+          <div className="mt-6 rounded-lg border border-indigo-100 bg-indigo-50 p-4 shadow-sm">
+            <div className="flex items-center gap-2 mb-3">
+              <Users className="h-5 w-5 text-indigo-600" />
+              <h3 className="font-semibold text-indigo-900">{text.groupingRecommendations}</h3>
+            </div>
+            <div className="space-y-2 text-sm text-indigo-800">
+              <div className="rounded border border-indigo-200 bg-white p-3 shadow-hairline">
+                <span className="font-semibold block mb-1 text-indigo-900">Group A</span>
+                {text.groupA}
+              </div>
+              <div className="rounded border border-indigo-200 bg-white p-3 shadow-hairline">
+                <span className="font-semibold block mb-1 text-indigo-900">Group B</span>
+                {text.groupB}
+              </div>
+            </div>
           </div>
         </div>
 
@@ -941,6 +991,7 @@ function StudentProfileView({
         <div className="flex gap-2">
           <ActionButton icon={<ClipboardList className="h-4 w-4" />} label={text.runScreening} onClick={onOpenScreening} />
           <SecondaryButton icon={<FileText className="h-4 w-4" />} label={text.openBrief} onClick={onOpenBrief} />
+          <SecondaryButton icon={<Printer className="h-4 w-4" />} label={lang === "en" ? "Print" : "Друк"} onClick={() => window.print()} />
         </div>
       </div>
 
@@ -1140,6 +1191,7 @@ function ScreeningView({
           <p className="mt-2 text-slate-600">{text.screeningLead}</p>
         </div>
         <div className="flex flex-wrap gap-2">
+          <SecondaryButton icon={<Printer className="h-4 w-4" />} label={lang === "en" ? "Print" : "Друк"} onClick={() => window.print()} />
           <SecondaryButton icon={<RotateCcw className="h-4 w-4" />} label={text.reset} onClick={onReset} />
           <SecondaryButton icon={<Download className="h-4 w-4" />} label={text.useDemo} onClick={onUseDemo} />
         </div>
@@ -1597,6 +1649,45 @@ function InfoChip({ icon, label }: { icon: React.ReactNode; label: string }) {
       <span className="text-blue-700">{icon}</span>
       {label}
     </span>
+  );
+}
+
+function ManualInputView({ lang, onBack, onGenerate }: { lang: Lang; onBack: () => void; onGenerate: () => void }) {
+  const text = copy[lang];
+  return (
+    <section className="mx-auto w-full max-w-2xl">
+      <div className="no-print mb-4 flex">
+        <button type="button" onClick={onBack} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
+          <ChevronLeft className="h-4 w-4" aria-hidden />
+          {text.dashboard}
+        </button>
+      </div>
+      <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
+        <div className="mb-6">
+          <h1 className="text-2xl font-bold text-slate-950">{text.inputPaperResults}</h1>
+          <p className="mt-2 text-slate-600">
+            {lang === "en" ? "Select the questions the student answered incorrectly on their paper test. We'll generate a recovery plan based on these gaps." : "Виберіть питання, на які учень відповів неправильно в паперовому тесті. Ми згенеруємо план на основі цих прогалин."}
+          </p>
+        </div>
+        <div className="grid gap-3 mb-6">
+          {questions.map((q, i) => (
+            <label key={q.id} className="flex items-start gap-3 rounded-lg border border-slate-200 p-3 hover:bg-slate-50 cursor-pointer transition">
+              <input type="checkbox" className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" />
+              <div>
+                <div className="font-medium text-slate-900">{lang === "en" ? "Question" : "Питання"} {i + 1}</div>
+                <div className="text-sm text-slate-500">{q.category}</div>
+              </div>
+            </label>
+          ))}
+        </div>
+        <button
+          onClick={onGenerate}
+          className="w-full rounded-lg border border-blue-200 bg-blue-600 px-4 py-3 text-base font-semibold text-white shadow-sm transition hover:bg-blue-700"
+        >
+          {lang === "en" ? "Generate Recovery Plan" : "Згенерувати план відновлення"}
+        </button>
+      </div>
+    </section>
   );
 }
 

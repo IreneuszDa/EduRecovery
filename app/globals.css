@@ -1,4 +1,13 @@
 @import "tailwindcss";
+@import "./print.css";
+
+/* Low-bandwidth mode */
+.low-bandwidth-mode img, .low-bandwidth-mode svg {
+  display: none !important;
+}
+.low-bandwidth-mode * {
+  background-image: none !important;
+}
 
 :root {
   /* Core Theme Colors */
