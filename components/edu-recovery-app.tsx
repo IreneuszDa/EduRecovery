@@ -459,38 +459,39 @@ export function EduRecoveryApp() {
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="no-print sticky top-0 z-30 flex min-h-16 items-center justify-between gap-3 border-b border-slate-200/90 bg-white/90 px-4 py-3 shadow-sm backdrop-blur-md sm:px-6 lg:px-8">
-            <div className="flex items-center gap-3 min-w-0">
+          <header className="no-print sticky top-0 z-30 flex flex-col items-stretch gap-2 border-b border-slate-200/90 bg-white/90 px-4 py-2 shadow-sm backdrop-blur-md sm:min-h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3 lg:px-8">
+            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
-                className="inline-flex shrink-0 items-center justify-center rounded-md p-1.5 text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none lg:hidden"
+                className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-md text-slate-500 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 lg:hidden"
               >
                 <span className="sr-only">Open sidebar</span>
                 <Menu className="h-6 w-6" aria-hidden="true" />
               </button>
               {isLowBandwidth ? (
-                <span className="text-lg font-bold text-blue-700 lg:hidden shrink-0">EduRecovery</span>
+                <span className="shrink-0 text-base font-bold tracking-tight text-blue-700 sm:text-lg lg:hidden">EduRecovery</span>
               ) : (
-                <img src="/logosm.png" alt="EduRecovery UA logo" className="h-10 w-auto shrink-0 lg:hidden" />
+                <img src="/logosm.png" alt="EduRecovery UA logo" className="h-8 w-auto shrink-0 sm:h-10 lg:hidden" />
               )}
-              <div className="min-w-0">
-                <p className="truncate text-sm font-semibold text-blue-600">{role === "teacher" ? text.teacher : text.student} {workspaceLabel}</p>
-                <h1 className="truncate text-xl font-semibold text-slate-950">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-xs font-semibold text-blue-600 sm:text-sm">{role === "teacher" ? text.teacher : text.student} {workspaceLabel}</p>
+                <h1 className="truncate text-lg font-semibold leading-6 text-slate-950 sm:text-xl">
                   {view === "setup" ? text.setup : view === "brief" ? text.teacherRecoveryBrief : view === "screening" ? text.screeningTitle : view === "student-profile" ? `${selectedStudent} - ${text.student}` : role === "teacher" ? text.dashboard : text.studentViewTitle}
                 </h1>
               </div>
             </div>
-            <div className="flex flex-wrap items-center justify-end gap-2">
-              <div className="flex items-center gap-2 px-2 border-r border-slate-200">
-                <label className="text-xs font-semibold text-slate-600 flex items-center gap-1 cursor-pointer">
+            <div className="flex items-center justify-between gap-2 sm:justify-end">
+              <div className="flex min-w-0 items-center">
+                <label className="flex h-10 min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 shadow-hairline sm:border-0 sm:bg-transparent sm:px-2 sm:shadow-none">
                   <input
                     type="checkbox"
                     checked={isLowBandwidth}
                     onChange={(e) => handleLowBandwidthChange(e.target.checked)}
-                    className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                    className="shrink-0 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
-                  {text.lowBandwidth}
+                  <span className="truncate sm:hidden">{lang === "en" ? "Low-data" : "Lite"}</span>
+                  <span className="hidden sm:inline">{text.lowBandwidth}</span>
                 </label>
               </div>
               <SegmentedControl
