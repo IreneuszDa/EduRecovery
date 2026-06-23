@@ -486,7 +486,7 @@ export function EduRecoveryApp() {
               </div>
             </div>
             <div className="flex shrink-0 items-center gap-2">
-              <div className="flex min-w-0 items-center">
+              <div className="hidden min-w-0 items-center sm:flex">
                 <label className="flex h-10 min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 shadow-hairline sm:border-0 sm:bg-transparent sm:px-2 sm:shadow-none">
                   <input
                     type="checkbox"
@@ -2022,15 +2022,15 @@ function SegmentedControl({
   onChange: (value: string) => void;
 }) {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-1">
+    <div className="flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 p-0.5">
       <span className="sr-only">{label}</span>
-      <span className="hidden px-2 text-slate-500 sm:inline-flex">{icon}</span>
+      <span className="hidden px-1.5 text-slate-500 sm:inline-flex">{icon}</span>
       {options.map((option) => (
         <button
           key={option.value}
           type="button"
           onClick={() => onChange(option.value)}
-          className={`rounded-lg px-3 py-2 text-sm font-semibold transition ${
+          className={`rounded-md px-2.5 py-1 text-xs font-semibold transition ${
             value === option.value ? "bg-white text-slate-950 shadow-hairline" : "text-slate-500 hover:text-slate-800"
           }`}
         >
