@@ -45,11 +45,13 @@ import {
   type Lang
 } from "@/lib/education-data";
 import { type AnswerMap, categoryLabel, scoreScreening } from "@/lib/scoring";
+import { motion, AnimatePresence } from "framer-motion";
+
 
 const LowBandwidthContext = createContext<boolean>(false);
 
 type Role = "teacher" | "student";
-type View = "dashboard" | "screening" | "brief" | "setup" | "student-profile" | "manual-input";
+type View = "dashboard" | "screening" | "brief" | "setup" | "student-profile" | "manual-input" | "student-summary";
 
 const categoryVisuals: Record<
   CategoryId,
@@ -372,8 +374,10 @@ export function EduRecoveryApp() {
           setAnswers({});
           setCurrentQuestionIndex(0);
         }}
-        onFinish={() => setView("brief")}
+        onFinish={() => setView(role === "teacher" ? "brief" : "student-summary")}
       />
+    ) : view === "student-summary" ? (
+      <StudentSummaryView lang={lang} result={result} onBack={() => setView("dashboard")} />
     ) : view === "brief" ? (
       <TeacherBriefView
         lang={lang}
@@ -506,9 +510,18 @@ export function EduRecoveryApp() {
               />
             </div>
           </header>
-
-          <div className="animate-fade-in-up mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8">{content}</div>
-          
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={view + (selectedStudent || "")}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="mx-auto w-full max-w-7xl flex-1 px-4 py-5 sm:px-6 lg:px-8"
+            >
+              {content}
+            </motion.div>
+          </AnimatePresence>
           <footer className="no-print mt-auto border-t border-slate-200/80 bg-white/50 px-4 py-5 text-center text-sm text-slate-500 backdrop-blur-sm sm:px-6 lg:px-8">
             <p>
               &copy; {new Date().getFullYear()} EduRecovery UA.{" "}
@@ -561,8 +574,8 @@ function WorkspaceSidebar({
   ];
 
   return (
-    <aside className={`no-print fixed inset-y-0 left-0 z-50 w-72 shrink-0 overflow-y-auto border-r border-slate-200/80 bg-white transition-transform duration-300 lg:static lg:flex lg:translate-x-0 ${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} lg:sticky lg:top-0 lg:h-screen lg:shadow-none`}>
-      <div className="flex h-full w-full flex-col p-5">
+    <aside className={`no-print fixed inset-y-0 left-0 z-50 w-72 shrink-0 flex flex-col border-r border-slate-200/80 bg-white transition-transform duration-300 lg:static lg:translate-x-0 ${isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"} lg:sticky lg:top-0 lg:h-screen lg:shadow-none`}>
+      <div className="flex flex-col px-5 pt-5">
         <a href="/" className="mb-7 flex items-center justify-center text-left hover:opacity-80 transition-opacity cursor-pointer">
           <span className="flex h-24 w-48 shrink-0 items-center justify-center overflow-hidden bg-transparent">
             {isLowBandwidth ? (
@@ -590,9 +603,11 @@ function WorkspaceSidebar({
             ))}
           </div>
         </div>
+      </div>
 
+      <div className="flex-1 overflow-y-auto px-5 pb-2">
         {role === "teacher" ? (
-          <nav className="mb-6 flex flex-col gap-3">
+          <nav className="flex flex-col gap-3">
             <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{lang === "en" ? "Students" : "Учні"}</p>
             <div className="flex flex-col gap-1 mb-2">
               <button
@@ -628,40 +643,50 @@ function WorkspaceSidebar({
                     <span className="truncate">{student.name}</span>
                   </button>
 
-                  {isSelected && (
-                    <div className="ml-4 mt-1 flex flex-col gap-1 border-l-2 border-slate-100 pl-3">
-                      {teacherStudentItems.map((item) => {
-                        const Icon = item.icon;
-                        const active = view === item.id;
-                        return (
-                          <button
-                            key={item.id}
-                            type="button"
-                            onClick={() => onSetView(item.id)}
-                            className={`group flex items-center gap-3 rounded-lg px-3 py-1.5 text-left text-sm transition-all duration-200 ${
-                              active ? "font-semibold text-blue-600" : "text-slate-500 hover:text-slate-900"
-                            }`}
-                          >
-                            <Icon className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`} strokeWidth={active ? 2.5 : 2} />
-                            <span className="truncate">{item.label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
+                  <AnimatePresence>
+                    {isSelected && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="ml-4 mt-1 flex flex-col gap-1 border-l-2 border-slate-100 pl-3">
+                          {teacherStudentItems.map((item) => {
+                            const Icon = item.icon;
+                            const active = view === item.id;
+                            return (
+                              <button
+                                key={item.id}
+                                type="button"
+                                onClick={() => onSetView(item.id)}
+                                className={`group flex items-center gap-3 rounded-lg px-3 py-1.5 text-left text-sm transition-all duration-200 ${
+                                  active ? "font-semibold text-blue-600" : "text-slate-500 hover:text-slate-900"
+                                }`}
+                              >
+                                <Icon className={`h-4 w-4 shrink-0 transition-colors ${active ? "text-blue-600" : "text-slate-400 group-hover:text-slate-600"}`} strokeWidth={active ? 2.5 : 2} />
+                                <span className="truncate">{item.label}</span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               );
             })}
           </nav>
         ) : (
-          <nav className="mb-6 flex flex-col gap-1.5">
+          <nav className="flex flex-col gap-1.5">
             <p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">{lang === "en" ? "Tools" : "Інструменти"}</p>
             {studentNavItems.map((item) => {
               const Icon = item.icon;
               const active = view === item.id;
 
               return (
-                <button
+                 <button
                   key={item.id}
                   type="button"
                   onClick={() => onSetView(item.id)}
@@ -679,29 +704,29 @@ function WorkspaceSidebar({
             })}
           </nav>
         )}
+      </div>
 
+      <div className="border-t border-slate-200 bg-white p-5 pt-4">
         {role === "teacher" && (
-          <div className="flex min-h-0 flex-1 flex-col justify-end">
-            <div className="mb-6">
-              <button
-                type="button"
-                onClick={onGenerateTasks}
-                disabled={isGeneratingTasks}
-                className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGeneratingTasks ? (
-                  <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-700" aria-hidden />
-                ) : (
-                  <MessageSquarePlus className="h-5 w-5" strokeWidth={2.5} aria-hidden />
-                )}
-                {isGeneratingTasks ? (lang === "en" ? "Generating..." : "Створення...") : text.generateAiTasks}
-              </button>
-            </div>
+          <div className="mb-4">
+            <button
+              type="button"
+              onClick={onGenerateTasks}
+              disabled={isGeneratingTasks}
+              className="flex w-full items-center justify-center gap-2.5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 shadow-sm transition hover:-translate-y-0.5 hover:bg-blue-100 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isGeneratingTasks ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-b-2 border-blue-700" aria-hidden />
+              ) : (
+                <MessageSquarePlus className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+              )}
+              {isGeneratingTasks ? (lang === "en" ? "Generating..." : "Створення...") : text.generateAiTasks}
+            </button>
           </div>
         )}
 
-        <div className="mt-auto border-t border-slate-200 pt-4">
-          <div className="mb-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+        <div>
+          <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
             <div className="flex items-center gap-3">
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border-2 border-white bg-slate-200 text-sm font-semibold text-slate-700 shadow-sm">
                 {role === "teacher" ? "O" : "M"}
@@ -712,12 +737,6 @@ function WorkspaceSidebar({
               </div>
             </div>
           </div>
-          {role === "teacher" && (
-            <div className="flex items-center justify-between rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-700">
-              <span>{tasksGenerated ? text.requested : text.ready}</span>
-              <HelpCircle className="h-4 w-4 text-blue-500" aria-hidden />
-            </div>
-          )}
         </div>
       </div>
     </aside>
@@ -1208,6 +1227,27 @@ function ScreeningView({
   const isLast = currentQuestionIndex === questions.length - 1;
   const canFinish = answeredCount === questions.length;
 
+  const [feedbackStatus, setFeedbackStatus] = useState<"correct" | "incorrect" | null>(null);
+
+  const handleProceed = () => {
+    if (!selectedOption) return;
+
+    if (selectedOption === currentQuestion.correctOptionId) {
+      setFeedbackStatus("correct");
+    } else {
+      setFeedbackStatus("incorrect");
+    }
+
+    setTimeout(() => {
+      setFeedbackStatus(null);
+      if (isLast) {
+        onFinish();
+      } else {
+        setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1));
+      }
+    }, 1500);
+  };
+
   return (
     <section className="mx-auto grid w-full max-w-4xl gap-5">
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
@@ -1245,17 +1285,29 @@ function ScreeningView({
         <div className="mt-6 grid gap-3">
           {currentQuestion.options.map((option) => {
             const active = selectedOption === option.id;
+            const isCorrectOption = option.id === currentQuestion.correctOptionId;
+
+            let activeClass = active
+              ? "border-blue-600 bg-blue-50 text-blue-950 shadow-hairline"
+              : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50";
+
+            if (feedbackStatus && active) {
+              if (feedbackStatus === "correct") {
+                activeClass = "border-green-600 bg-green-50 text-green-950 shadow-hairline";
+              } else {
+                activeClass = "border-red-600 bg-red-50 text-red-950 shadow-hairline";
+              }
+            } else if (feedbackStatus === "incorrect" && isCorrectOption) {
+              activeClass = "border-green-600 bg-green-50 text-green-950 shadow-hairline opacity-60";
+            }
 
             return (
               <button
                 key={option.id}
                 type="button"
-                onClick={() => onAnswer(currentQuestion.id, option.id)}
-                className={`flex min-h-14 items-center gap-3 rounded-lg border px-4 py-3 text-left transition ${
-                  active
-                    ? "border-blue-600 bg-blue-50 text-blue-950 shadow-hairline"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
-                }`}
+                onClick={() => { if (!feedbackStatus) onAnswer(currentQuestion.id, option.id); }}
+                disabled={feedbackStatus !== null}
+                className={`flex min-h-14 items-center gap-3 rounded-lg border px-4 py-3 text-left transition ${activeClass}`}
               >
                 <span
                   className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-sm font-semibold ${
@@ -1283,10 +1335,11 @@ function ScreeningView({
             <ActionButton
               icon={<ChevronRight className="h-4 w-4" />}
               label={text.next}
-              onClick={() => setCurrentQuestionIndex(Math.min(questions.length - 1, currentQuestionIndex + 1))}
+              onClick={handleProceed}
+              disabled={!selectedOption || feedbackStatus !== null}
             />
           ) : (
-            <ActionButton icon={<ArrowRight className="h-4 w-4" />} label={text.finish} onClick={onFinish} disabled={!canFinish} />
+            <ActionButton icon={<ArrowRight className="h-4 w-4" />} label={text.finish} onClick={handleProceed} disabled={!selectedOption || feedbackStatus !== null} />
           )}
         </div>
       </div>
@@ -1664,9 +1717,9 @@ function StudentAvatar({
   selected?: boolean;
 }) {
   const sizeClass = {
-    sm: "h-6 w-6 rounded-full",
-    md: "h-10 w-10 rounded-lg",
-    lg: "h-12 w-12 rounded-lg"
+    sm: "h-8 w-8 rounded-full",
+    md: "h-10 w-10 rounded-full",
+    lg: "h-12 w-12 rounded-full"
   }[size];
   const isLowBandwidth = useContext(LowBandwidthContext);
 
@@ -1985,5 +2038,45 @@ function SegmentedControl({
         </button>
       ))}
     </div>
+  );
+}
+
+function StudentSummaryView({
+  lang,
+  result,
+  onBack
+}: {
+  lang: Lang;
+  result: ReturnType<typeof scoreScreening>;
+  onBack: () => void;
+}) {
+  const isEn = lang === "en";
+  return (
+    <section className="mx-auto flex w-full max-w-2xl flex-col items-center justify-center gap-6 py-12 text-center">
+      <div className="flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-green-600">
+        <CheckCircle2 className="h-12 w-12" />
+      </div>
+      <h1 className="text-3xl font-semibold text-slate-950">
+        {isEn ? "Great job!" : "Чудова робота!"}
+      </h1>
+      <p className="text-lg text-slate-600">
+        {isEn ? "You have finished the quick screening." : "Ти завершив швидкий скринінг."}
+      </p>
+      <div className="mt-4 rounded-xl border border-slate-200 bg-white p-6 shadow-sm w-full max-w-md">
+        <p className="text-sm font-medium uppercase tracking-wider text-slate-500 mb-2">
+          {isEn ? "Your Score" : "Твій результат"}
+        </p>
+        <p className="text-4xl font-bold text-blue-600">
+          {result.totalCorrect} / {result.totalQuestions}
+        </p>
+      </div>
+      <div className="mt-6">
+        <ActionButton 
+          icon={<ArrowRight className="h-4 w-4" />} 
+          label={isEn ? "Return to dashboard" : "Повернутись на головну"} 
+          onClick={onBack} 
+        />
+      </div>
+    </section>
   );
 }
