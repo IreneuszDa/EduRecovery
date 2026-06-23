@@ -2,11 +2,27 @@
 @import "./print.css";
 
 /* Low-bandwidth mode */
-.low-bandwidth-mode img, .low-bandwidth-mode svg {
-  display: none !important;
+.low-bandwidth-mode *,
+.low-bandwidth-mode *::before,
+.low-bandwidth-mode *::after {
+  animation: none !important;
+  transition: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
-.low-bandwidth-mode * {
+
+.low-bandwidth-mode {
   background-image: none !important;
+}
+
+/* Hide images and heavy/unnecessary media elements completely */
+.low-bandwidth-mode img,
+.low-bandwidth-mode video,
+.low-bandwidth-mode iframe,
+.low-bandwidth-mode canvas,
+.low-bandwidth-mode audio {
+  display: none !important;
 }
 
 :root {

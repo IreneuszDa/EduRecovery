@@ -268,16 +268,16 @@ const copy = {
 } satisfies Record<Lang, Record<string, string>>;
 
 const roster = [
-  { name: "Maksym", grade: "6", progress: 62, status: "active", gaps: ["percentages", "word-problems"] as CategoryId[] },
-  { name: "Iryna", grade: "6", progress: 76, status: "monitor", gaps: ["fractions", "geometry"] as CategoryId[] },
-  { name: "Sofia", grade: "7", progress: 88, status: "stable", gaps: ["geometry"] as CategoryId[] },
-  { name: "Danylo", grade: "6", progress: 45, status: "at-risk", gaps: ["equations", "word-problems", "fractions"] as CategoryId[] },
-  { name: "Kateryna", grade: "5", progress: 92, status: "stable", gaps: [] as CategoryId[] },
-  { name: "Artem", grade: "7", progress: 55, status: "active", gaps: ["percentages", "equations"] as CategoryId[] },
-  { name: "Veronika", grade: "5", progress: 71, status: "monitor", gaps: ["word-problems"] as CategoryId[] },
-  { name: "Bohdan", grade: "6", progress: 38, status: "at-risk", gaps: ["fractions", "percentages", "word-problems"] as CategoryId[] },
-  { name: "Polina", grade: "7", progress: 81, status: "stable", gaps: ["equations"] as CategoryId[] },
-  { name: "Matviy", grade: "5", progress: 65, status: "monitor", gaps: ["geometry", "fractions"] as CategoryId[] }
+  { name: "Maksym", grade: "6", progress: 62, status: "active", avatar: "/student-avatars/maksym.jpg", gaps: ["percentages", "word-problems"] as CategoryId[] },
+  { name: "Iryna", grade: "6", progress: 76, status: "monitor", avatar: "/student-avatars/iryna.jpg", gaps: ["fractions", "geometry"] as CategoryId[] },
+  { name: "Sofia", grade: "7", progress: 88, status: "stable", avatar: "/student-avatars/sofia.jpg", gaps: ["geometry"] as CategoryId[] },
+  { name: "Danylo", grade: "6", progress: 45, status: "at-risk", avatar: "/student-avatars/danylo.jpg", gaps: ["equations", "word-problems", "fractions"] as CategoryId[] },
+  { name: "Kateryna", grade: "5", progress: 92, status: "stable", avatar: "/student-avatars/kateryna.jpg", gaps: [] as CategoryId[] },
+  { name: "Artem", grade: "7", progress: 55, status: "active", avatar: "/student-avatars/artem.jpg", gaps: ["percentages", "equations"] as CategoryId[] },
+  { name: "Veronika", grade: "5", progress: 71, status: "monitor", avatar: "/student-avatars/veronika.jpg", gaps: ["word-problems"] as CategoryId[] },
+  { name: "Bohdan", grade: "6", progress: 38, status: "at-risk", avatar: "/student-avatars/bohdan.jpg", gaps: ["fractions", "percentages", "word-problems"] as CategoryId[] },
+  { name: "Polina", grade: "7", progress: 81, status: "stable", avatar: "/student-avatars/polina.jpg", gaps: ["equations"] as CategoryId[] },
+  { name: "Matviy", grade: "5", progress: 65, status: "monitor", avatar: "/student-avatars/matviy.jpg", gaps: ["geometry", "fractions"] as CategoryId[] }
 ];
 
 export function EduRecoveryApp() {
@@ -598,11 +598,7 @@ function WorkspaceSidebar({
                       isSelected ? "bg-slate-100 font-semibold text-slate-950" : "font-medium text-slate-600 hover:bg-slate-50 hover:text-slate-900"
                     }`}
                   >
-                    <span className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full border text-xs font-bold ${
-                      isSelected ? "border-blue-200 bg-white text-blue-700" : "border-blue-100 bg-blue-50 text-blue-700"
-                    }`}>
-                      {student.name[0]}
-                    </span>
+                    <StudentAvatar student={student} size="sm" selected={isSelected} />
                     <span className="truncate">{student.name}</span>
                   </button>
 
@@ -714,6 +710,7 @@ function TeacherDashboard({
   setupData,
   onGenerateTasks,
   onOpenScreening,
+  onOpenManualInput,
   onOpenBrief,
   onSelectStudent
 }: {
@@ -922,9 +919,7 @@ function TeacherDashboard({
                 className="grid w-full gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left shadow-hairline transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-md lg:grid-cols-[minmax(10rem,0.95fr)_minmax(8.5rem,0.75fr)_minmax(10rem,1fr)_auto] lg:items-center"
               >
                 <div className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-hairline">
-                    {student.name.slice(0, 1)}
-                  </span>
+                  <StudentAvatar student={student} size="md" />
                   <div>
                     <p className="font-semibold text-slate-950">{student.name}</p>
                     <p className="text-sm text-slate-500">{lang === "en" ? "Grade" : "Клас"} {student.grade}</p>
@@ -997,10 +992,13 @@ function StudentProfileView({
 
       <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-soft">
-          <div className="mb-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-xl font-semibold text-slate-950">{text.categoryScores}</h2>
-              <p className="mt-1 text-sm text-slate-500">{student.name} | {studentProfile.context[lang]}</p>
+          <div className="mb-4 flex items-center justify-between gap-4">
+            <div className="flex min-w-0 items-center gap-3">
+              <StudentAvatar student={student} size="lg" />
+              <div className="min-w-0">
+                <h2 className="text-xl font-semibold text-slate-950">{text.categoryScores}</h2>
+                <p className="mt-1 truncate text-sm text-slate-500">{student.name} | {studentProfile.context[lang]}</p>
+              </div>
             </div>
             <span className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-1 text-sm font-semibold text-slate-700">
               {result.totalCorrect}/10
@@ -1098,10 +1096,12 @@ function StudentDashboard({
 function AiComposer({
   lang,
   tasksGenerated,
+  isGeneratingTasks = false,
   onGenerateTasks
 }: {
   lang: Lang;
   tasksGenerated: boolean;
+  isGeneratingTasks?: boolean;
   onGenerateTasks: () => void;
 }) {
   const text = copy[lang];
@@ -1586,9 +1586,7 @@ function PriorityStudentRow({
       className="grid w-full gap-3 rounded-lg border border-slate-200 bg-white p-3 text-left shadow-hairline transition hover:-translate-y-0.5 hover:border-blue-200 hover:bg-blue-50/50 hover:shadow-md"
     >
       <span className="flex min-w-0 items-center gap-3">
-        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white text-sm font-semibold text-slate-700 shadow-hairline">
-          {student.name[0]}
-        </span>
+        <StudentAvatar student={student} size="md" />
         <span className="min-w-0">
           <span className="block font-semibold text-slate-950">{student.name}</span>
           <span className="mt-1 flex flex-wrap gap-2">
@@ -1622,6 +1620,42 @@ function ClassGapStrip({ category, count, lang }: { category: CategoryId; count:
         <div className={`h-full rounded-lg ${visual.bar}`} style={{ width: `${percent}%` }} />
       </div>
     </div>
+  );
+}
+
+function StudentAvatar({
+  student,
+  size = "md",
+  selected = false
+}: {
+  student: (typeof roster)[number];
+  size?: "sm" | "md" | "lg";
+  selected?: boolean;
+}) {
+  const sizeClass = {
+    sm: "h-6 w-6 rounded-full",
+    md: "h-10 w-10 rounded-lg",
+    lg: "h-12 w-12 rounded-lg"
+  }[size];
+
+  return (
+    <span
+      className={`flex ${sizeClass} shrink-0 items-center justify-center overflow-hidden border bg-white text-sm font-semibold text-slate-700 shadow-hairline ${
+        selected ? "border-blue-200 ring-2 ring-blue-100" : "border-slate-100"
+      }`}
+      aria-hidden="true"
+    >
+      <img
+        src={student.avatar}
+        alt=""
+        className="h-full w-full object-cover"
+        loading="lazy"
+        onError={(event) => {
+          event.currentTarget.style.display = "none";
+          event.currentTarget.parentElement?.append(student.name[0]);
+        }}
+      />
+    </span>
   );
 }
 
