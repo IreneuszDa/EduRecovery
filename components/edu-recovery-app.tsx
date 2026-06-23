@@ -32,7 +32,7 @@ import {
   WifiOff,
   X
 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState } from "react";
 import {
   categoryOrder,
   categoryMeta,
@@ -45,6 +45,8 @@ import {
   type Lang
 } from "@/lib/education-data";
 import { type AnswerMap, categoryLabel, scoreScreening } from "@/lib/scoring";
+
+const LowBandwidthContext = createContext<boolean>(false);
 
 type Role = "teacher" | "student";
 type View = "dashboard" | "screening" | "brief" | "setup" | "student-profile" | "manual-input";
@@ -283,7 +285,7 @@ const roster = [
 export function EduRecoveryApp() {
   const [lang, setLang] = useState<Lang>("en");
   const [role, setRole] = useState<Role>("teacher");
-  const [view, setView] = useState<View>("setup");
+  const [view, setView] = useState<View>("dashboard");
   const [selectedStudent, setSelectedStudent] = useState<string | null>(null);
   const [answers, setAnswers] = useState<AnswerMap>({});
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -291,6 +293,18 @@ export function EduRecoveryApp() {
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isLowBandwidth, setIsLowBandwidth] = useState(false);
+
+  useEffect(() => {
+    const saved = localStorage.getItem("lowBandwidthMode");
+    if (saved !== null) {
+      setIsLowBandwidth(saved === "true");
+    }
+  }, []);
+
+  const handleLowBandwidthChange = (checked: boolean) => {
+    setIsLowBandwidth(checked);
+    localStorage.setItem("lowBandwidthMode", checked ? "true" : "false");
+  };
 
   const [setupData, setSetupData] = useState({
     grade: "6",
@@ -409,7 +423,8 @@ export function EduRecoveryApp() {
     );
 
   return (
-    <main className={`min-h-screen bg-slate-50 text-slate-950 ${isLowBandwidth ? "low-bandwidth-mode" : ""}`}>
+    <LowBandwidthContext.Provider value={isLowBandwidth}>
+      <main className={`min-h-screen bg-slate-50 text-slate-950 ${isLowBandwidth ? "low-bandwidth-mode" : ""}`}>
       <div className="flex min-h-screen">
         {isMobileMenuOpen && (
           <div 
@@ -454,7 +469,11 @@ export function EduRecoveryApp() {
                 <span className="sr-only">Open sidebar</span>
                 <Menu className="h-6 w-6" aria-hidden="true" />
               </button>
-              <img src="/logosm.png" alt="EduRecovery UA logo" className="h-10 w-auto shrink-0 lg:hidden" />
+              {isLowBandwidth ? (
+                <span className="text-lg font-bold text-blue-700 lg:hidden shrink-0">EduRecovery</span>
+              ) : (
+                <img src="/logosm.png" alt="EduRecovery UA logo" className="h-10 w-auto shrink-0 lg:hidden" />
+              )}
               <div className="min-w-0">
                 <p className="truncate text-sm font-semibold text-blue-600">{role === "teacher" ? text.teacher : text.student} {workspaceLabel}</p>
                 <h1 className="truncate text-xl font-semibold text-slate-950">
@@ -468,7 +487,7 @@ export function EduRecoveryApp() {
                   <input
                     type="checkbox"
                     checked={isLowBandwidth}
-                    onChange={(e) => setIsLowBandwidth(e.target.checked)}
+                    onChange={(e) => handleLowBandwidthChange(e.target.checked)}
                     className="rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                   />
                   {text.lowBandwidth}
@@ -498,6 +517,7 @@ export function EduRecoveryApp() {
         </div>
       </div>
     </main>
+    </LowBandwidthContext.Provider>
   );
 }
 
@@ -527,6 +547,7 @@ function WorkspaceSidebar({
   onSelectStudent: (name: string | null) => void;
 }) {
   const text = copy[lang];
+  const isLowBandwidth = useContext(LowBandwidthContext);
   const studentNavItems = [
     { id: "dashboard" as View, label: text.dashboard, icon: LayoutDashboard },
     { id: "screening" as View, label: text.quickScreening, icon: ClipboardList }
@@ -543,7 +564,11 @@ function WorkspaceSidebar({
       <div className="flex h-full w-full flex-col p-5">
         <a href="/" className="mb-7 flex items-center justify-center text-left hover:opacity-80 transition-opacity cursor-pointer">
           <span className="flex h-24 w-48 shrink-0 items-center justify-center overflow-hidden bg-transparent">
-            <img src="/logosm.png" alt="EduRecovery UA logo" className="h-full w-full object-contain" />
+            {isLowBandwidth ? (
+              <span className="text-xl font-bold text-blue-700 tracking-wider">EduRecovery</span>
+            ) : (
+              <img src="/logosm.png" alt="EduRecovery UA logo" className="h-full w-full object-contain" />
+            )}
           </span>
         </a>
 
@@ -1284,6 +1309,7 @@ function TeacherBriefView({
   onBack: () => void;
 }) {
   const text = copy[lang];
+  const isLowBandwidth = useContext(LowBandwidthContext);
   const primaryBlock = recoveryBlocks[primaryGap];
   const secondaryBlock = recoveryBlocks[secondaryGap];
   const stronger = result.strongerCategories
@@ -1317,7 +1343,11 @@ function TeacherBriefView({
               {studentProfile.name} | {lang === "en" ? "Grade" : "Клас"} {setupData.grade} | {studentProfile.age} | {studentProfile.language[lang]}
             </p>
           </div>
-          <img src="/logosm.png" alt="EduRecovery UA logo" className="h-16 w-32 object-contain" />
+          {isLowBandwidth ? (
+            <span className="text-2xl font-bold text-blue-700 tracking-wider">EduRecovery UA</span>
+          ) : (
+            <img src="/logosm.png" alt="EduRecovery UA logo" className="h-16 w-32 object-contain" />
+          )}
         </div>
 
         <div className="grid gap-5 py-6 md:grid-cols-3">
@@ -1637,6 +1667,7 @@ function StudentAvatar({
     md: "h-10 w-10 rounded-lg",
     lg: "h-12 w-12 rounded-lg"
   }[size];
+  const isLowBandwidth = useContext(LowBandwidthContext);
 
   return (
     <span
@@ -1645,16 +1676,20 @@ function StudentAvatar({
       }`}
       aria-hidden="true"
     >
-      <img
-        src={student.avatar}
-        alt=""
-        className="h-full w-full object-cover"
-        loading="lazy"
-        onError={(event) => {
-          event.currentTarget.style.display = "none";
-          event.currentTarget.parentElement?.append(student.name[0]);
-        }}
-      />
+      {isLowBandwidth ? (
+        student.name[0]
+      ) : (
+        <img
+          src={student.avatar}
+          alt=""
+          className="h-full w-full object-cover"
+          loading="lazy"
+          onError={(event) => {
+            event.currentTarget.style.display = "none";
+            event.currentTarget.parentElement?.append(student.name[0]);
+          }}
+        />
+      )}
     </span>
   );
 }
@@ -1795,13 +1830,18 @@ function TeacherSetupView({
   onDemoFill: () => void;
 }) {
   const text = copy[lang];
+  const isLowBandwidth = useContext(LowBandwidthContext);
 
   return (
     <section className="mx-auto w-full max-w-2xl">
       <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-soft sm:p-8">
         <div className="mb-6 flex flex-col items-center text-center">
           <span className="flex h-20 w-40 items-center justify-center overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-            <img src="/logosm.png" alt="EduRecovery UA logo" className="h-full w-full object-contain" />
+            {isLowBandwidth ? (
+              <span className="text-xl font-bold text-blue-700 tracking-wider">EduRecovery</span>
+            ) : (
+              <img src="/logosm.png" alt="EduRecovery UA logo" className="h-full w-full object-contain" />
+            )}
           </span>
           <h1 className="mt-4 text-2xl font-bold text-slate-950">{text.setupTitle}</h1>
           <p className="mt-2 text-slate-600">{text.setupLead}</p>

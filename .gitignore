@@ -18,3 +18,16 @@ pnpm-debug.log*
 *.local
 *tmp/
 .vercel
+
+# AI Context and Documentation
+*.md
+!README.md
+.gemini/
+.cursor/
+.cursorrules
+AGENTS.md
+CLAUDE.md
+structure.txt
+prompts/
+test_*.py
+test_*.js
