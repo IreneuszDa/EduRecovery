@@ -463,8 +463,8 @@ export function EduRecoveryApp() {
         />
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="no-print sticky top-0 z-30 flex flex-col items-stretch gap-2 border-b border-slate-200/90 bg-white/90 px-4 py-2 shadow-sm backdrop-blur-md sm:min-h-16 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-6 sm:py-3 lg:px-8">
-            <div className="flex min-w-0 items-center gap-2.5 sm:gap-3">
+          <header className="no-print sticky top-0 z-30 flex items-center justify-between gap-3 border-b border-slate-200/90 bg-white/90 px-4 py-2 shadow-sm backdrop-blur-md sm:min-h-16 sm:px-6 sm:py-3 lg:px-8">
+            <div className="flex min-w-0 flex-1 items-center gap-2.5 sm:gap-3">
               <button
                 type="button"
                 onClick={() => setIsMobileMenuOpen(true)}
@@ -480,12 +480,12 @@ export function EduRecoveryApp() {
               )}
               <div className="min-w-0 flex-1">
                 <p className="truncate text-xs font-semibold text-blue-600 sm:text-sm">{role === "teacher" ? text.teacher : text.student} {workspaceLabel}</p>
-                <h1 className="truncate text-lg font-semibold leading-6 text-slate-950 sm:text-xl">
+                <h1 className="truncate text-base font-semibold leading-tight text-slate-950 sm:text-xl sm:leading-6">
                   {view === "setup" ? text.setup : view === "brief" ? text.teacherRecoveryBrief : view === "screening" ? text.screeningTitle : view === "student-profile" ? `${selectedStudent} - ${text.student}` : role === "teacher" ? text.dashboard : text.studentViewTitle}
                 </h1>
               </div>
             </div>
-            <div className="flex items-center justify-between gap-2 sm:justify-end">
+            <div className="flex shrink-0 items-center gap-2">
               <div className="flex min-w-0 items-center">
                 <label className="flex h-10 min-w-0 cursor-pointer items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold text-slate-600 shadow-hairline sm:border-0 sm:bg-transparent sm:px-2 sm:shadow-none">
                   <input
@@ -1253,8 +1253,8 @@ function ScreeningView({
       <div className="no-print flex flex-wrap items-center justify-between gap-3">
         <div>
           <p className="text-sm font-medium text-blue-700">{text.quickScreening}</p>
-          <h1 className="mt-1 text-3xl font-semibold text-slate-950">{text.screeningTitle}</h1>
-          <p className="mt-2 text-slate-600">{text.screeningLead}</p>
+          <h1 className="mt-1 text-2xl font-semibold text-slate-950 sm:text-3xl">{text.screeningTitle}</h1>
+          <p className="mt-2 text-sm text-slate-600 sm:text-base">{text.screeningLead}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <SecondaryButton icon={<Printer className="h-4 w-4" />} label={lang === "en" ? "Print" : "Друк"} onClick={() => window.print()} />
@@ -1323,14 +1323,14 @@ function ScreeningView({
         </div>
       </div>
 
-      <div className="no-print flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      <div className="no-print flex w-full items-center justify-between gap-3">
         <SecondaryButton
           icon={<ChevronLeft className="h-4 w-4" />}
           label={text.previous}
           onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
           disabled={currentQuestionIndex === 0}
         />
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex gap-2">
           {!isLast ? (
             <ActionButton
               icon={<ChevronRight className="h-4 w-4" />}
@@ -1392,8 +1392,8 @@ function TeacherBriefView({
         <div className="flex flex-col gap-4 border-b border-slate-200 pb-6 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-medium text-blue-700">EduRecovery UA</p>
-            <h1 className="mt-2 text-3xl font-semibold text-slate-950">{text.teacherRecoveryBrief}</h1>
-            <p className="mt-2 text-slate-600">
+            <h1 className="mt-2 text-2xl font-semibold text-slate-950 sm:text-3xl">{text.teacherRecoveryBrief}</h1>
+            <p className="mt-2 text-sm text-slate-600 sm:text-base">
               {studentProfile.name} | {lang === "en" ? "Grade" : "Клас"} {setupData.grade} | {studentProfile.age} | {studentProfile.language[lang]}
             </p>
           </div>
